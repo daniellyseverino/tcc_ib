@@ -1,0 +1,295 @@
+---
+title: "Previsão de séries epidemiológicas incorporando atraso na notificação"
+author: 
+  - Danielly Santos Severino^[Aluna, danyss@ufmg.br]
+  - Dani Gamerman^[Orientador, danig@umfg.br]
+  - Izabel Nolau^[Co-Orientadora, nolau@dme.ufrj.br]
+date: "`r Sys.Date()`"
+output: 
+  slidy_presentation:
+    css : ./assets/css/style_rmarkdown.css
+---
+  
+```{r include=FALSE}
+
+source("apresentacao/global.R", encoding = "UTF-8")
+
+
+```
+
+
+```{r include=FALSE}
+# tags$div(
+#   class="grid grid-pad",
+#   
+#   tags$div(
+#     style = "width: 33%; min-height: 1px;
+#     padding-right: 0px; margin: 0px;",
+#     class="col-",
+#     tags$img(
+#         src = "./assets/img/Brasil.png",
+#         style="float: left; border-radius: 5px;display: block;
+#     margin: 0 auto;",
+#         width="100", height="80"
+#       ),
+#     plot_eff_visit_in_br %>% hc_size(height = 250)
+#   ),
+#   tags$div(
+#     style = "width: 100%; min-height: 1px;
+#     padding-right: 0px; margin: 0px;margin-bottom: 10px;",
+#     class="col-",
+#     tags$h4(style = "font-size:12px; padding: 0px; margin-bottom: 0px;margin-left: 10px;",
+#             "Effectiveness of Tasks not Simple in BR"),
+#     HTML(tab_eff_visitas_in_br)
+#   )
+# 
+#   
+# )
+```
+
+
+# Estrutura dos Casos Reais de Dengue
+
+```{r echo=FALSE}
+
+
+tags$div(
+  class="grid grid-pad",
+  
+  
+  
+  tags$div(
+    style = "width: 50%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_n_td %>% 
+  hc_chart(
+    zoomBySingleTouch = TRUE,
+    zoomType = 'x'
+  ) %>% hc_size(height = 400)
+  ),
+  
+  tags$div(
+    style = "width: 50%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_estrutura_delay_tempo %>% 
+  hc_chart(
+    zoomBySingleTouch = TRUE,
+    zoomType = 'x'
+  ) %>% hc_size(height = 400)
+  )
+
+  
+)
+
+```
+
+# Modelo Proposto
+
+Modelo proposto para $N_{t}$
+
+$$N_{t} \sim BN(\theta_{t}, \phi)$$
+$$\theta_{t} = \dfrac{a_{\theta} c_{\theta} f_{\theta} exp(-c_{\theta}t)}
+{[b_{\theta} + exp(-c_{\theta}t)]^ { f_{\theta} + 1} }$$
+
+Modelo proposto para $n_{t,d}$
+
+$$n_{t,d} \sim BN(\lambda_{t,d}, \sigma)$$
+
+$$log(\lambda_{t,d}) = \alpha_{t} + \beta_{d}$$
+$$exp(\alpha_{t}) = \dfrac{a_{\alpha} c_{\alpha} f_{\alpha} exp(-c_{\alpha}t)}
+{[b_{\alpha} + exp(-c_{\alpha}t)]^ { f_{\alpha} + 1} }$$
+
+$$\beta_{d} = \gamma d$$
+
+# Estimativas Iniciais sem incorporar estrutura de Atraso na Notificação
+
+```{r echo=FALSE}
+
+tags$div(
+  class="grid grid-pad",
+  
+  tags$div(
+    style = "width: 50%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_N_t_inical %>% hc_size(height = 400)
+  ),
+  
+  tags$div(
+    style = "width: 50%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_lambda_td %>% hc_size(height = 400)
+  ),
+  
+  tags$div(
+    style = "width: 50%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_estrutura_delay_estimativas %>% hc_size(height = 400)
+  )
+
+  
+)
+
+
+```
+
+# Estimativas incorporando estrutura de Atraso na Notificação
+
+```{r echo=FALSE}
+tags$div(
+  class="grid grid-pad",
+  
+  tags$div(
+    style = "width: 50%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_N_t_com_chute %>% hc_size(height = 400)
+  ),
+  
+  tags$div(
+    style = "width: 50%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_lamda_com_chute %>% hc_size(height = 400)
+  )
+
+  
+)
+
+```
+
+# Comparando quantidades reais e estimadas
+
+```{r echo=FALSE}
+
+tags$div(
+  class="grid grid-pad",
+  
+  tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatar_plot_n_lambda_delayi(
+      dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d1"),
+      num_delay = 1) %>% hc_size(height = 400)
+  ),
+  
+  tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatar_plot_n_lambda_delayi(
+      dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d2"),
+      num_delay = 2) %>% hc_size(height = 400)
+  ),
+  
+  tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatar_plot_n_lambda_delayi(
+      dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d3"),
+      num_delay = 3) %>% hc_size(height = 400)
+  ),
+  tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatar_plot_n_lambda_delayi(
+      dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d4"),
+      num_delay = 4) %>% hc_size(height = 400)
+  ),
+  
+  tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatar_plot_n_lambda_delayi(
+      dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d5"),
+      num_delay = 5) %>% hc_size(height = 400)
+  ),
+  
+  tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatar_plot_n_lambda_delayi(
+      dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d6"),
+      num_delay = 6) %>% hc_size(height = 400)
+  ),
+  
+  tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatar_plot_n_lambda_delayi(
+      dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d7"),
+      num_delay = 7) %>% hc_size(height = 400)
+  ),
+  
+  tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatar_plot_n_lambda_delayi(
+      dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d8"),
+      num_delay = 8) %>% hc_size(height = 400)
+  ),
+  
+  tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatar_plot_n_lambda_delayi(
+      dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d9"),
+      num_delay = 9) %>% hc_size(height = 400)
+  ),
+  
+  tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatar_plot_n_lambda_delayi(
+      dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d10"),
+      num_delay = 10) %>% hc_size(height = 400)
+  )
+
+  
+)
+
+
+
+```
+
+
+# 
+
+```{r include=FALSE}
+
+# Gráfico somente para utilizar a função 'hw_grid', 'NÃO REMOVER', necessário para funcionar o código CSS
+
+chart <- 
+highchart() %>% 
+  hc_add_series(
+    data = NULL, 
+    type = "column",
+    showInLegend = F
+  ) %>% 
+   hc_yAxis(
+    title = list(text = ""), 
+    lineColor = "#f7f7f7",
+    gridLineColor = "#f4f4f4"
+  ) %>% 
+   hc_xAxis(
+    title = list(text = ""), 
+    lineColor = "#f7f7f7",
+    gridLineColor = "#f4f4f4"
+  )
+
+hw_grid(chart, ncol = 1)
+
+```

@@ -1,0 +1,53 @@
+div.slide h1{
+    padding-left: 20px;
+    padding-right: 20pt;
+    padding-top: 2pt;
+    padding-bottom: 2pt;
+    margin-top: 0;
+    margin-left: -20px;
+    margin-right: 60pt;
+    margin-bottom: 5px;
+    display: block;
+    background: #66CDAA;
+    border-radius: 15px 50px;
+    line-height: 1.2em;
+}
+
+div.slide.titlepage h1 {
+    padding-top: 15%;
+    padding-bottom: 5%;
+    margin-right: 0;
+    text-align: center;
+    height: 20px;
+}
+
+div.slide.titlepage{
+    text-align: center;
+    background-color: #66CDAA;
+}
+
+p {
+    margin-left: auto;
+    margin-bottom: 15px;
+    margin-top: 10px;
+}
+
+p > em {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+p.author {
+    margin-top: 20px;
+}
+
+p.date {
+    margin-top: 20px;
+    font-size: 20px;
+}
+
+text.highcharts-title > tspan {
+    font-size: 15px;
+    font-weight: bold;
+}
+

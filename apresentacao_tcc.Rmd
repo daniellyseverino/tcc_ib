@@ -7,7 +7,7 @@ author:
 date: "`r Sys.Date()`"
 output: 
   slidy_presentation:
-    css : ./assets/css/style_rmarkdown.css
+    css : ./assets/css/style.css
 ---
   
 ```{r include=FALSE}
@@ -58,6 +58,18 @@ tags$div(
   
   
   
+  
+  tags$div(
+    style = "width: 50%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_N_t_completo %>% 
+  hc_chart(
+    zoomBySingleTouch = TRUE,
+    zoomType = 'x'
+  ) %>% hc_size(height = 350)
+  ),
+  
   tags$div(
     style = "width: 50%; min-height: 1px;
     padding-right: 0px; margin: 0px;",
@@ -71,13 +83,25 @@ tags$div(
   
   tags$div(
     style = "width: 50%; min-height: 1px;
-    padding-right: 0px; margin: 0px;",
+    padding-right: 0px; margin-left: 0px;",
+    class="col-",
+    N_t_atualizacao %>% 
+  hc_chart(
+    zoomBySingleTouch = TRUE,
+    zoomType = 'x'
+  ) %>% hc_size(height = 500)
+  ),
+  
+  tags$div(
+    style = "width: 50%; min-height: 1px;
+    padding-right: 0px; margin-left: 0px;",
     class="col-",
     plot_estrutura_delay_tempo %>% 
   hc_chart(
     zoomBySingleTouch = TRUE,
     zoomType = 'x'
-  ) %>% hc_size(height = 400)
+  ) %>%
+    hc_yAxis(min = -10, max = 10) %>% hc_size(height = 500)
   )
 
   
@@ -85,23 +109,39 @@ tags$div(
 
 ```
 
-# Modelo Proposto
+# Modelo Proposto sem incorporar estrutura de Atraso na Notificação
 
-Modelo proposto para $N_{t}$
+Para cada atraso distinto de notificação foi ajustado um modelo de $n_{t,d}$ com as seguintes especificações:
 
-$$N_{t} \sim BN(\theta_{t}, \phi)$$
-$$\theta_{t} = \dfrac{a_{\theta} c_{\theta} f_{\theta} exp(-c_{\theta}t)}
-{[b_{\theta} + exp(-c_{\theta}t)]^ { f_{\theta} + 1} }$$
+$$n_{t,d} \sim Poisson(\lambda_{t,d})$$
+$$log(\lambda_{t,d}) = \alpha_{t,d}$$
+$$exp(\alpha_{t,d}) = \dfrac{a_{d} c_{d} f_{d} exp(-c_{d}t)}
+{[b_{d} + exp(-c_{d}t)]^ { f_{d} + 1} }$$
 
-Modelo proposto para $n_{t,d}$
+Para $t = 1, ..., 35$, onde
 
-$$n_{t,d} \sim BN(\lambda_{t,d}, \sigma)$$
+$$a_{d} \sim Gama(0.1, 0.1) $$
+$$c_{d} \sim Gama(2, 9) $$
 
-$$log(\lambda_{t,d}) = \alpha_{t} + \beta_{d}$$
-$$exp(\alpha_{t}) = \dfrac{a_{\alpha} c_{\alpha} f_{\alpha} exp(-c_{\alpha}t)}
-{[b_{\alpha} + exp(-c_{\alpha}t)]^ { f_{\alpha} + 1} }$$
+$$f_{d} \sim Gama(0.01, 0.01) $$
+$$b_{d} \sim Normal(0, \sqrt{20}) $$
+Para obter as estimativas do Total de casos ($N_{t}$) o modelo foi ajustado utilizando a soma dos casos relatados em todos os períodos de atraso nas notificações. 
 
-$$\beta_{d} = \gamma d$$
+$$N_{t} =  \sum_{d = 0}^{D} n_{t,d}$$
+
+$$N_{t} \sim Poisson(\theta_{t})$$
+
+$$exp(\theta_{t}) = \dfrac{a c f exp(-ct)}{[b + exp(-ct)]^ { f + 1} }$$
+
+Para $t = 1, ..., 35$, onde
+
+$$a \sim Gama(0.1, 0.1) $$
+
+$$c \sim Gama(2, 9) $$
+
+$$f \sim Gama(0.01, 0.01) $$
+
+$$b \sim Normal(0, \sqrt{20}) $$
 
 # Estimativas Iniciais sem incorporar estrutura de Atraso na Notificação
 
@@ -129,13 +169,50 @@ tags$div(
     padding-right: 0px; margin: 0px;",
     class="col-",
     plot_estrutura_delay_estimativas %>% hc_size(height = 400)
-  )
+  ),
 
+  tags$div(
+    style = "width: 50%; min-height: 1px;
+    padding-right: 0px; margin: 0px;margin-bottom: 10px;",
+    class="col-",
+    tags$h4(style = "font-size:15px; padding: 0px; margin-bottom: 0px;margin-left: 25px;",
+            "Valores Reais (Valores Estimados)"),
+    HTML(tabela_estimativas_iniciais)
+  )
   
 )
 
 
 ```
+
+# Modelo Proposto incorporando estrutura de Atraso na Notificação
+
+Modelo proposto para $N_{t}$
+
+$$N_{t} \sim BN(\theta_{t}, \phi)$$
+
+$$\theta_{t} = \dfrac{a_{\theta} c_{\theta} f_{\theta} exp(-c_{\theta}t)}
+{[b_{\theta} + exp(-c_{\theta}t)]^ { f_{\theta} + 1} }$$
+
+
+Modelo proposto para $n_{t,d}$
+
+$$n_{t,d} \sim BN(\lambda_{t,d}, \sigma)$$
+
+$$log(\lambda_{t,d}) = \alpha_{t} + \beta_{d}$$
+$$exp(\alpha_{t}) = \dfrac{a_{\alpha} c_{\alpha} f_{\alpha} exp(-c_{\alpha}t)}
+{[b_{\alpha} + exp(-c_{\alpha}t)]^ { f_{\alpha} + 1} }$$
+
+$$\beta_{d} = \gamma d$$
+Para $t = 1, ..., 35$, e $d = 1, ..., D$, onde
+
+
+$$\gamma \sim Normal(0,100)$$
+$$b_{\theta} = Exp(Normal(0,\sqrt{20}))$$
+Destaca-se que:
+
+$$n_{t,d} = N_{t} - \sum_{d = 1}^{D} n_{t,d}$$
+$$\theta_{t} > \sum_{d = 1}^{D} \lambda_{t,d}$$
 
 # Estimativas incorporando estrutura de Atraso na Notificação
 
@@ -155,6 +232,15 @@ tags$div(
     padding-right: 0px; margin: 0px;",
     class="col-",
     plot_lamda_com_chute %>% hc_size(height = 400)
+  ),
+
+  tags$div(
+    style = "width: 50%; min-height: 1px;
+    padding-right: 0px; margin: 0px;margin-bottom: 10px;",
+    class="col-",
+    tags$h4(style = "font-size:15px; padding: 0px; margin-bottom: 0px;margin-left: 25px;",
+            "Valores Reais (Valores Estimados)"),
+    HTML(tabela_estimativas_com_chute)
   )
 
   
@@ -162,7 +248,7 @@ tags$div(
 
 ```
 
-# Comparando quantidades reais e estimadas
+# Comparando quantidades reais e estimadas por Atraso na Notificação
 
 ```{r echo=FALSE}
 
@@ -175,7 +261,13 @@ tags$div(
     class="col-",
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d1"),
-      num_delay = 1) %>% hc_size(height = 400)
+      num_delay = 1,
+      estimativas_lambda = estimativas_com_chute$lambda) %>% 
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
   
   tags$div(
@@ -184,7 +276,13 @@ tags$div(
     class="col-",
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d2"),
-      num_delay = 2) %>% hc_size(height = 400)
+      num_delay = 2,
+      estimativas_lambda = estimativas_com_chute$lambda) %>% 
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
   
   tags$div(
@@ -193,7 +291,13 @@ tags$div(
     class="col-",
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d3"),
-      num_delay = 3) %>% hc_size(height = 400)
+      num_delay = 3,
+      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
   tags$div(
     style = "width: 33%; min-height: 1px;
@@ -201,7 +305,13 @@ tags$div(
     class="col-",
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d4"),
-      num_delay = 4) %>% hc_size(height = 400)
+      num_delay = 4,
+      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
   
   tags$div(
@@ -210,7 +320,13 @@ tags$div(
     class="col-",
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d5"),
-      num_delay = 5) %>% hc_size(height = 400)
+      num_delay = 5,
+      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
   
   tags$div(
@@ -219,7 +335,13 @@ tags$div(
     class="col-",
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d6"),
-      num_delay = 6) %>% hc_size(height = 400)
+      num_delay = 6,
+      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
   
   tags$div(
@@ -228,7 +350,13 @@ tags$div(
     class="col-",
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d7"),
-      num_delay = 7) %>% hc_size(height = 400)
+      num_delay = 7,
+      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
   
   tags$div(
@@ -237,7 +365,13 @@ tags$div(
     class="col-",
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d8"),
-      num_delay = 8) %>% hc_size(height = 400)
+      num_delay = 8,
+      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
   
   tags$div(
@@ -246,7 +380,13 @@ tags$div(
     class="col-",
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d9"),
-      num_delay = 9) %>% hc_size(height = 400)
+      num_delay = 9,
+      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
   
   tags$div(
@@ -255,7 +395,13 @@ tags$div(
     class="col-",
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d10"),
-      num_delay = 10) %>% hc_size(height = 400)
+      num_delay = 10,
+      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
   )
 
   
@@ -265,6 +411,9 @@ tags$div(
 
 ```
 
+# Avaliando Convergência dos parâmetros
+
+# Referências
 
 # 
 

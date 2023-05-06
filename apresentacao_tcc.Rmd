@@ -1,9 +1,9 @@
 ---
 title: "Previsão de séries epidemiológicas incorporando atraso na notificação"
 author: 
-  - Danielly Santos Severino^[Aluna, danyss@ufmg.br]
-  - Dani Gamerman^[Orientador, danig@umfg.br]
-  - Izabel Nolau^[Co-Orientadora, nolau@dme.ufrj.br]
+  - "Aluna: Danielly Santos Severino (danyss@ufmg.br)"
+  - "Orientador: Dani Gamerman (danig@ufmg.br)"
+  - "Co-Orientadora: Izabel Nolau (nolau@dme.ufrj.br)"
 date: "`r Sys.Date()`"
 output: 
   slidy_presentation:
@@ -47,8 +47,22 @@ source("apresentacao/global.R", encoding = "UTF-8")
 # )
 ```
 
+# Notação
 
-# Estrutura dos Casos Reais de Dengue
+$T$:&nbsp; Tempo atual
+
+$t$:&nbsp; Índice do tempo, variando em $\{1,2, ..., T+H\}$
+
+$D$:&nbsp; Atraso máximo relevante
+
+$d$:&nbsp; Índice do atraso, variando em $\{0, 1, ..., D\}$
+
+$n_{t,d}$:&nbsp; Número de eventos ocorridos no tempo $t$ registrados após $d$ unidades de tempo
+
+$N_{t} = \sum_{d=0}^{D} n_{t,d}$:&nbsp; Número total de eventos ocorridos no tempo $t$
+
+
+# Estrutura dos casos reais de dengue
 
 ```{r echo=FALSE}
 
@@ -109,29 +123,33 @@ tags$div(
 
 ```
 
-# Modelo Proposto sem incorporar estrutura de Atraso na Notificação
+# Modelo proposto com estrutura de atraso independente
 
 Para cada atraso distinto de notificação foi ajustado um modelo de $n_{t,d}$ com as seguintes especificações:
 
 $$n_{t,d} \sim Poisson(\lambda_{t,d})$$
 $$log(\lambda_{t,d}) = \alpha_{t,d}$$
-$$exp(\alpha_{t,d}) = \dfrac{a_{d} c_{d} f_{d} exp(-c_{d}t)}
-{[b_{d} + exp(-c_{d}t)]^ { f_{d} + 1} }$$
+$$exp(\alpha_{t,d}) = \dfrac{a_{d} \; c_{d}\; f_{d}\; \exp(-c_{d}\;t)}
+{[b_{d} + \exp(-c_{d}\;t)]^ { f_{d} + 1} }$$
 
-Para $t = 1, ..., 35$, onde
+Para $t = 1, ..., T$ e $d = 0,1,...,D$, onde
 
 $$a_{d} \sim Gama(0.1, 0.1) $$
+
+$$b_{d} \sim Normal(0, \sqrt{20}) $$
+
+
 $$c_{d} \sim Gama(2, 9) $$
 
 $$f_{d} \sim Gama(0.01, 0.01) $$
-$$b_{d} \sim Normal(0, \sqrt{20}) $$
-Para obter as estimativas do Total de casos ($N_{t}$) o modelo foi ajustado utilizando a soma dos casos relatados em todos os períodos de atraso nas notificações. 
+
+Para obter as estimativas do total de casos ($N_{t}$) o modelo foi ajustado utilizando a soma dos casos relatados em todos os períodos de atraso nas notificações. 
 
 $$N_{t} =  \sum_{d = 0}^{D} n_{t,d}$$
 
 $$N_{t} \sim Poisson(\theta_{t})$$
 
-$$exp(\theta_{t}) = \dfrac{a c f exp(-ct)}{[b + exp(-ct)]^ { f + 1} }$$
+$$exp(\theta_{t}) = \dfrac{a \;c \;f \exp(-c\;t)}{[b + \exp(-c\;t)]^ { f + 1} }$$
 
 Para $t = 1, ..., 35$, onde
 
@@ -143,7 +161,45 @@ $$f \sim Gama(0.01, 0.01) $$
 
 $$b \sim Normal(0, \sqrt{20}) $$
 
-# Estimativas Iniciais sem incorporar estrutura de Atraso na Notificação
+# Densidades das distribuições a priori
+
+```{r echo=FALSE}
+
+tags$div(
+  class="grid grid-pad",
+  
+  tags$div(
+    style = "width: 25%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_a %>% hc_size(height = 400)
+  ),
+  tags$div(
+    style = "width: 25%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_b %>% hc_size(height = 400)
+  ),
+  tags$div(
+    style = "width: 25%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_c %>% hc_size(height = 400)
+  ),
+  tags$div(
+    style = "width: 25%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_f %>% hc_size(height = 400)
+  )
+  
+)
+
+
+```
+
+
+# Estimativas iniciais sem incorporar estrutura de atraso na notificação
 
 ```{r echo=FALSE}
 
@@ -185,26 +241,26 @@ tags$div(
 
 ```
 
-# Modelo Proposto incorporando estrutura de Atraso na Notificação
+# Modelo proposto incorporando estrutura de atraso na notificação
 
 Modelo proposto para $N_{t}$
 
-$$N_{t} \sim BN(\theta_{t}, \phi)$$
+$$N_{t} \sim Poisson(\theta_{t})$$
 
-$$\theta_{t} = \dfrac{a_{\theta} c_{\theta} f_{\theta} exp(-c_{\theta}t)}
-{[b_{\theta} + exp(-c_{\theta}t)]^ { f_{\theta} + 1} }$$
+$$\theta_{t} = \dfrac{a_{\theta}\; c_{\theta}\; f_{\theta} \exp(-c_{\theta}\;t)}
+{[b_{\theta} + \exp(-c_{\theta}\;t)]^ { f_{\theta} + 1} }$$
 
 
 Modelo proposto para $n_{t,d}$
 
-$$n_{t,d} \sim BN(\lambda_{t,d}, \sigma)$$
+$$n_{t,d} \sim Poisson(\lambda_{t,d})$$
 
 $$log(\lambda_{t,d}) = \alpha_{t} + \beta_{d}$$
-$$exp(\alpha_{t}) = \dfrac{a_{\alpha} c_{\alpha} f_{\alpha} exp(-c_{\alpha}t)}
-{[b_{\alpha} + exp(-c_{\alpha}t)]^ { f_{\alpha} + 1} }$$
+$$exp(\alpha_{t}) = \dfrac{a_{\alpha}\; c_{\alpha}\; f_{\alpha} \exp(-c_{\alpha}\;t)}
+{[b_{\alpha} + \exp(-c_{\alpha}\;t)]^ { f_{\alpha} + 1} }$$
 
 $$\beta_{d} = \gamma d$$
-Para $t = 1, ..., 35$, e $d = 1, ..., D$, onde
+Para $t = 1, ..., T$, e $d = 1, ..., D$, onde
 
 
 $$\gamma \sim Normal(0,100)$$
@@ -214,7 +270,7 @@ Destaca-se que:
 $$n_{t,d} = N_{t} - \sum_{d = 1}^{D} n_{t,d}$$
 $$\theta_{t} > \sum_{d = 1}^{D} \lambda_{t,d}$$
 
-# Estimativas incorporando estrutura de Atraso na Notificação
+# Estimativas incorporando estrutura de atraso na notificação
 
 ```{r echo=FALSE}
 tags$div(
@@ -248,7 +304,7 @@ tags$div(
 
 ```
 
-# Comparando quantidades reais e estimadas por Atraso na Notificação
+# Comparando quantidades reais e estimadas por atraso na notificação
 
 ```{r echo=FALSE}
 
@@ -411,7 +467,222 @@ tags$div(
 
 ```
 
-# Avaliando Convergência dos parâmetros
+# Comparação dos modelos
+
+```{r echo=FALSE}
+tags$div(
+  class="grid grid-pad",
+  
+  tags$div(
+    style = "width: 50%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_N_t_modelos %>% hc_size(height = 400)
+  ),
+  tags$div(
+    style = "width: 10%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-"
+  ),
+  
+  tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatacao_grafico_compara_modelos(
+      dados_plot = dados_comparacao_modelos %>%
+        filter(delay == "d1"),
+      num_delay = 1
+    ) %>%
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
+  ),
+  
+   tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatacao_grafico_compara_modelos(
+      dados_plot = dados_comparacao_modelos %>%
+        filter(delay == "d2"),
+      num_delay = 2
+    ) %>%
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
+  ),
+  
+   tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatacao_grafico_compara_modelos(
+      dados_plot = dados_comparacao_modelos %>%
+        filter(delay == "d3"),
+      num_delay = 3
+    ) %>%
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
+  ),
+  
+   tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatacao_grafico_compara_modelos(
+      dados_plot = dados_comparacao_modelos %>%
+        filter(delay == "d4"),
+      num_delay = 4
+    ) %>%
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
+  ),
+  
+   tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatacao_grafico_compara_modelos(
+      dados_plot = dados_comparacao_modelos %>%
+        filter(delay == "d5"),
+      num_delay = 5
+    ) %>%
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
+  ),
+  
+   tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatacao_grafico_compara_modelos(
+      dados_plot = dados_comparacao_modelos %>%
+        filter(delay == "d6"),
+      num_delay = 6
+    ) %>%
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
+  ),
+  
+   tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatacao_grafico_compara_modelos(
+      dados_plot = dados_comparacao_modelos %>%
+        filter(delay == "d7"),
+      num_delay = 7
+    ) %>%
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
+  ),
+  
+   tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatacao_grafico_compara_modelos(
+      dados_plot = dados_comparacao_modelos %>%
+        filter(delay == "d8"),
+      num_delay = 8
+    ) %>%
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
+  ),
+  
+   tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatacao_grafico_compara_modelos(
+      dados_plot = dados_comparacao_modelos %>%
+        filter(delay == "d9"),
+      num_delay = 9
+    ) %>%
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
+  ),
+  
+   tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    formatacao_grafico_compara_modelos(
+      dados_plot = dados_comparacao_modelos %>%
+        filter(delay == "d10"),
+      num_delay = 10
+    ) %>%
+      hc_chart(
+        zoomBySingleTouch = TRUE,
+        zoomType = 'y'
+      ) %>%
+      hc_yAxis(max = 1500) %>% hc_size(height = 400)
+  )
+  
+
+  
+)
+
+```
+
+
+# Modelo proposto incorporando estrutura de atraso na notificação 
+
+Modelo proposto para $N_{t}$
+
+$$N_{t} \sim BN(\theta_{t}, \phi)$$
+
+$$\theta_{t} = \dfrac{a_{\theta} \;c_{\theta} \;f_{\theta} \exp(-c_{\theta}\;t)}
+{[b_{\theta} + \exp(-c_{\theta}\;t)]^ { f_{\theta} + 1} }$$
+
+
+Modelo proposto para $n_{t,d}$
+
+$$n_{t,d} \sim BN(\lambda_{t,d}, \sigma)$$
+
+$$log(\lambda_{t,d}) = \alpha_{t} + \beta_{d}$$
+$$exp(\alpha_{t}) = \dfrac{a_{\alpha} \;c_{\alpha}\; f_{\alpha} \exp(-c_{\alpha}\;t)}
+{[b_{\alpha} + \exp(-c_{\alpha}\;t)]^ { f_{\alpha} + 1} }$$
+
+$$\beta_{d} = \gamma d$$
+Para $t = 1, ..., T$, e $d = 1, ..., D$, onde
+
+
+$$\gamma \sim Normal(0,100)$$
+$$b_{\theta} = Exp(Normal(0,\sqrt{20}))$$
+Destaca-se que:
+
+$$n_{t,d} = N_{t} - \sum_{d = 1}^{D} n_{t,d}$$
+$$\theta_{t} > \sum_{d = 1}^{D} \lambda_{t,d}$$
+# Avaliando convergência dos parâmetros
+
+
 
 # Referências
 

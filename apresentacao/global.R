@@ -16,19 +16,79 @@ library(htmltools)
 # Distribuições ================================================================
 
 distribuicoes = tibble(
-  x = seq(1,50,0.1),
-  a = dgamma(x, shape = 0.1, scale = 0.1),
-  c = dgamma(x, shape = 2, scale = 9),
-  f = dgamma(x, shape = 0.01, scale = 0.01)
+  x = seq(0,50,0.01),
+  a = dgamma(x, shape = 0.1, rate = 0.1),
+  c = dgamma(x, shape = 2, rate = 9),
+  f = dgamma(x, shape = 0.01, rate = 0.01)
 )
 
  
 plot_a <- distribuicoes %>% 
   hchart('line', hcaes(x = x,
-                       y = a)) %>% 
-  hc_xAxis(min = 0, max = 4) %>% 
-  hc_yAxis(title = list(text = "f(x)"))
+                       y = a),
+         marker = F) %>% 
+  hc_xAxis(max = 4) %>% 
+  hc_yAxis(title = list(text = "f(x)")) %>% 
+  hc_title(
+    text = paste0(
+      "<b style='display: block; font-size: 15px;'>",
+      "a ~ Gamma(0.1, 0.1)", "</b>"
+    ),
+    margin = 20,
+    align = "center",
+    style = list(useHTML = TRUE)
+  )
 
+plot_c <- distribuicoes %>% 
+  hchart('line', hcaes(x = x,
+                       y = c),
+         marker = F) %>% 
+  hc_xAxis(max = 1.5) %>% 
+  hc_yAxis(title = list(text = "f(x)")) %>% 
+  hc_title(
+    text = paste0(
+      "<b style='display: block; font-size: 15px;'>",
+      "c ~ Gamma(2, 9)", "</b>"
+    ),
+    margin = 20,
+    align = "center",
+    style = list(useHTML = TRUE)
+  )
+
+plot_f <- distribuicoes %>% 
+  hchart('line', hcaes(x = x,
+                       y = f),
+         marker = F) %>% 
+  hc_xAxis(max = 2) %>% 
+  hc_yAxis(title = list(text = "f(x)")) %>% 
+  hc_title(
+    text = paste0(
+      "<b style='display: block; font-size: 15px;'>",
+      "f ~ Gamma(0.01, 0.01)", "</b>"
+    ),
+    margin = 20,
+    align = "center",
+    style = list(useHTML = TRUE)
+  )
+
+
+plot_b <- tibble(
+  x = seq(-3,3, 0.1),
+  b = dnorm(x, mean = 0, sd = sqrt(20))
+  ) %>% 
+  hchart('line', hcaes(x = x,
+                       y = b),
+         marker = F) %>% 
+  hc_yAxis(title = list(text = "f(x)")) %>% 
+  hc_title(
+    text = paste0(
+      "<b style='display: block; font-size: 15px;'>",
+      "b ~ Normal(0, sqrt(20))", "</b>"
+    ),
+    margin = 20,
+    align = "center",
+    style = list(useHTML = TRUE)
+  )
 
 # Dados reais ==================================================================
 
@@ -62,6 +122,20 @@ formatacao_grafico <- function(plot, titulo, titulo_x, titulo_y){
           menuItems = list('downloadCSV', 'downloadSVG')
         )
       )
+    ) %>% 
+    hc_xAxis(
+      plotLines = list(
+        list(
+          value = 25,
+          color = "gray",
+          dashStyle = 'longdashdot',
+          width = 2,
+          label = list(
+            text = "Hoje (T = 25)",
+            style = list(color = "black", fontWeight = "bold")
+          )
+        )
+      )
     )
   
 }
@@ -76,6 +150,8 @@ dados_dengue_real$N = rowSums(dados_dengue_real)
 
 T = dim(dados_dengue)[1]
 D = dim(dados_dengue)[2]
+hoje = 25
+#hoje = 20
 
 # criando os NAs
 dados_dengue[outer(1:T, 0:(D - 1), FUN = "+") > T] <- NA
@@ -141,21 +217,11 @@ N_t_atualizacao = dados_plot %>%
     pointFormat = paste0(
       '<span style="color:{series.color}; font-weight: bold;">Numéro total de casos no tempo {point.t} com {series.name} :</span> <b>{point.y:,.0f}</b>'
     )
-  ) %>% 
-  hc_xAxis(
-    plotLines = list(
-      list(
-        value = 25,
-        color = "gray",
-        dashStyle = 'longdashdot',
-        width = 2,
-        label = list(
-          text = "Hoje (t = 25)",
-          style = list(color = "black", fontWeight = "bold")
-        )
-      )
-    )
   )
+
+# tabelas motivacao =====================================
+
+
 
 # plots dados completos =================================
 
@@ -172,21 +238,7 @@ plot_N_t_completo = dados_dengue_longo_completo %>%
       '<span style="color:{series.color}; font-weight: bold;">Numéro total de casos no tempo {point.t}:</span> <b>{point.y:,.0f}</b>'
     )
   ) %>% 
-  hc_colors(c('black')) %>% 
-  hc_xAxis(
-    plotLines = list(
-      list(
-        value = 25,
-        color = "gray",
-        dashStyle = 'longdashdot',
-        width = 2,
-        label = list(
-          text = "Hoje (t = 25)",
-          style = list(color = "black", fontWeight = "bold")
-        )
-      )
-    )
-  )
+  hc_colors(c('black'))
 
 plot_n_td_completo = dados_dengue_longo_completo %>%
   hchart('line', hcaes(x = t, 
@@ -201,22 +253,7 @@ plot_n_td_completo = dados_dengue_longo_completo %>%
     pointFormat = paste0(
       '<span style="color:{series.color}; font-weight: bold;">Numéro de casos no tempo {point.t} com {point.d} unidade(s) de atraso:</span> <b>{point.y:,.0f}</b>'
     )
-  ) %>% 
-  hc_xAxis(
-    plotLines = list(
-      list(
-        value = 25,
-        color = "gray",
-        dashStyle = 'longdashdot',
-        width = 2,
-        label = list(
-          text = "Hoje (t = 25)",
-          style = list(color = "black", fontWeight = "bold")
-        )
-      )
-    )
   )
-
 
 # plots com NA ============================================
 
@@ -233,24 +270,7 @@ plot_n_td = dados_dengue_longo %>%
     pointFormat = paste0(
       '<span style="color:{series.color}; font-weight: bold;">Numéro de casos no tempo {point.t} com {point.d} unidade(s) de atraso:</span> <b>{point.y:,.0f}</b>'
     )
-  )  %>% 
-  hc_xAxis(
-    plotLines = list(
-      list(
-        value = 25,
-        color = "gray",
-        dashStyle = 'longdashdot',
-        width = 2,
-        label = list(
-          text = "Hoje (t = 25)",
-          style = list(color = "black", fontWeight = "bold")
-        )
-      )
-    )
-  )
-
-
-
+  ) 
 
 plot_estrutura_delay_tempo = dados_dengue_longo %>% 
   hchart('line', hcaes(x = t, 
@@ -306,7 +326,7 @@ stanLogistic = function(stanModel, y){
 # temos mil estimativas de a,b,c,f
 
 #estimativas = apply(dados_dengue, 2, function(y) stanLogistic(modelo_stan, y = y))
-#saveRDS(estimativas, "estimativas/estimativas_n_td_por_delay.rds",version = 2)
+#saveRDS(estimativas, "estimativas/estimativas_n_td_por_delay_T20.rds",version = 2)
 estimativas = readRDS("estimativas/estimativas_n_td_por_delay.rds")
 
 # abcf_por_dalay = lapply(estimativas, function(x) c(mean(x$a), mean(x$b), mean(x$c), mean(x$f)) )
@@ -321,6 +341,8 @@ ic_mu_theta = HPDinterval(mcmc(estimativas_theta$mu), prob = 0.99) %>%
   as.data.frame() %>% 
   mutate(t = 1:T)
 
+library(brms)
+HPDinterval(mcmc(dpois(x = 1:T,estimativas_theta$mu[,1])))
 
 
 genLog = function(t, a, b, c, f, logScale = TRUE){
@@ -353,11 +375,6 @@ calcula_mae_e_rmse = function(valores_estimados, valores_reais){
   
 }
 
-calcula_mae_e_rmse(
-  valores_reais = dados_dengue$N_t,
-  valores_estimados = theta_inicial
-)
- 
 
 plot_N_t_inical = dados_dengue %>% 
   bind_cols(theta_t = theta_inicial) %>% 
@@ -391,21 +408,7 @@ plot_N_t_inical = dados_dengue %>%
              text = calcula_mae_e_rmse(
                valores_reais = dados_dengue$N_t,
                valores_estimados = theta_inicial
-             )) %>% 
-  hc_xAxis(
-    plotLines = list(
-      list(
-        value = 25,
-        color = "gray",
-        dashStyle = 'longdashdot',
-        width = 2,
-        label = list(
-          text = "Hoje (t = 25)",
-          style = list(color = "black", fontWeight = "bold")
-        )
-      )
-    )
-  )
+             ))
 
 
 
@@ -445,20 +448,6 @@ plot_lambda_td = dados_estimados %>%
   ) %>% 
   hc_subtitle(
     text = "Estimativa sem incorporar estrutura de Atraso na Notificação"
-  ) %>% 
-  hc_xAxis(
-    plotLines = list(
-      list(
-        value = 25,
-        color = "gray",
-        dashStyle = 'longdashdot',
-        width = 2,
-        label = list(
-          text = "Hoje (t = 25)",
-          style = list(color = "black", fontWeight = "bold")
-        )
-      )
-    )
   )
 
 
@@ -523,6 +512,121 @@ tabela_estimativas_iniciais = tabela %>%
   row_spec(1:(nrow(tabela)), background = "rgb(235, 235, 245, 0.3)", color = "#07080E")  %>% 
   scroll_box(height = "280px")
 
+# Incorporando estrutura delay =================================================
+
+dados_dengue_longo_completo = dados_dengue_longo %>% 
+  mutate(d = d + 1) %>% 
+  filter(!is.na(n_td)) %>% 
+  arrange(d)
+
+# separando o delay 0 (novo 1)
+td_dalay_1 = (dados_dengue_longo_completo %>% filter(d == 1)) %>% select(t,d)
+n_dalay_1 = (dados_dengue_longo_completo %>% filter(d == 1)) %>% 
+  select(n_td) %>% 
+  mutate(n_td = as.numeric(n_td))
+
+td_dalay_k = dados_dengue_longo_completo %>% filter(d != 1) %>% select(t,d)
+n_dalay_k = dados_dengue_longo_completo %>% filter(d != 1) %>%
+  select(n_td) %>% 
+  mutate(n_td = as.numeric(n_td))
+
+dados_stan = list(
+  nk = n_dalay_1$n_td, n_k = n_dalay_k$n_td,
+  T = T, D = D,
+  Tk = td_dalay_1$t, Dk = td_dalay_1$d,
+  T_k =  td_dalay_k$t,  D_k =  td_dalay_k$d,
+  qk = nrow(n_dalay_1), q_k = nrow(n_dalay_k)
+)
+
+#modelo_completo_stan =  stan_model("izabel\\modelCompleteLogistic.stan")
+
+warmup = 1000
+chains = 1
+thin = 1
+sample_size = 10000
+number_interations = warmup + thin*sample_size
+
+params = c("lambda",
+           "alpha", "a_alpha", "b_alpha", "c_alpha", "f_alpha",
+           "beta", "b_beta",
+           "theta", "a_theta", "b_theta", "c_theta", "f_theta",
+           "psi")
+
+# output_modelo_sem_chute = rstan::sampling(modelo_completo_stan,
+#                                           data = dados_stan,
+#                                           iter = number_interations,
+#                                           warmup = warmup,
+#                                           chains = chains,
+#                                           pars = params,
+#                                           #init = init,
+#                                           verbose = FALSE)
+
+# estimativas_sem_chute = rstan::extract(output_modelo_sem_chute)
+# saveRDS(estimativas_sem_chute, "estimativas\\estimativas_sem_chute.rds", version = 2)
+estimativas_sem_chute = readRDS("estimativas\\estimativas_sem_chute.rds")
+
+theta_t_sem_chute = apply(estimativas_sem_chute$theta, 2, mean)
+
+plot_N_t_sem_chute = dados_dengue %>% 
+  bind_cols(theta_t = theta_t_sem_chute) %>% 
+  mutate(t = 1:T) %>% 
+  pivot_longer(cols = 12:13) %>% 
+  hchart('line', hcaes(x = t, 
+                       y = value, 
+                       group = name), marker = F,
+         showInLegend = T) %>% 
+  formatacao_grafico(titulo = "Total de Casos reais e estimados de Dengue no Tempo",
+                     titulo_x = "Tempo t",
+                     titulo_y = "Total de Casos") %>% 
+  hc_tooltip(
+    pointFormat = paste0(
+      '<span style="color:{series.color}; font-weight: bold;">Total de casos no tempo {point.t}:</span> <b>{point.y:,.0f}</b>'
+    )
+  ) %>% 
+  hc_subtitle(
+    text = "Estimativa incorporando estrutura de Delay sem chute inicial"
+  )
+
+
+
+
+lambda.mean = matrix(NA, T, D - 1)
+for(t in 1:T){
+  for(d in 1:(D - 1)){
+    lambda.mean[t, d] = mean(estimativas_sem_chute$lambda[ , t, d])
+  }
+}
+
+lambda_td_sem_chute = as.data.frame(lambda.mean)
+colnames(lambda_td_sem_chute) = paste0("d",1:10)
+lambda_td_sem_chute = lambda_td_sem_chute %>% 
+  rownames_to_column(var = "t")
+
+lambda_td_sem_chute_longo = lambda_td_sem_chute %>% 
+  pivot_longer(cols = (0+2):D,
+               names_to = "delay",
+               values_to = "lambda_td") %>% 
+  mutate(delay = factor(delay, levels = c("d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10" )),
+         d = str_remove(delay, "d"))
+
+lambda_estimado_sem_chute = lambda_td_sem_chute_longo %>% 
+  hchart('line', hcaes(x = t, 
+                       y = lambda_td, 
+                       group = delay,
+                       d = d), marker = F,
+         showInLegend = T) %>% 
+  formatacao_grafico(titulo = "Casos Estimados de Dengue no Tempo por tempo de Atraso",
+                     titulo_x = "Tempo t",
+                     titulo_y = "Casos Estimados") %>% 
+  hc_tooltip(
+    pointFormat = paste0(
+      '<span style="color:{series.color}; font-weight: bold;">Casos Estimados no tempo {point.t} com {point.d} unidade(s) de atraso:</span> <b>{point.y:.2f}</b>'
+    )
+  ) %>% 
+  hc_subtitle(
+    text = "Estimativa sem incorporando estrutura de Delay sem chute inicial"
+  )
+
 # Incorporando estrutura delay e estimativa inicial ============================
 
 
@@ -579,6 +683,8 @@ chute_inicial = list(
 # estimativas_com_chute = rstan::extract(output_modelo_com_chute)
 # saveRDS(estimativas_com_chute, "estimativas\\estimativas_com_chute.rds", version = 2)
 estimativas_com_chute = readRDS("estimativas\\estimativas_com_chute.rds")
+
+
 
 ic_theta_com_chute = HPDinterval(mcmc(estimativas_com_chute$theta), prob = 0.99) %>% 
   as.data.frame() %>% 
@@ -744,8 +850,279 @@ formatar_plot_n_lambda_delayi = function(dados_plot, num_delay, estimativas_lamb
                  valores_reais = dados_plot %>% filter(name == "n_td", !is.na(value)) %>% pull(value),
                  valores_estimados = c(dados_plot %>% filter(name == "lambda_td") %>% pull(value))[1:(T-num_delay)]
                )) %>% 
-    hc_colors(c("red", "black"))
+    hc_colors(c("red", "black")) 
   
 }
+
+
+# comparacao modelos ===========================================================
+
+plot_N_t_modelos = dados_dengue %>% 
+  bind_cols(`Estimativa - Modelo 1` = theta_inicial,
+            `Estimativa - Modelo 2` = theta_t_com_chute) %>% 
+  mutate(t = 1:T) %>% 
+  pivot_longer(cols = 12:14) %>%
+  hchart('line', hcaes(x = t, 
+                       y = value, 
+                       group = name),marker = F,
+         showInLegend = T,
+         tooltip = list(pointFormat = paste0(
+           'Total de casos no tempo {point.t}:</span> <b>{point.y:,.0f}</b><br>')
+         )
+  ) %>% 
+  hc_xAxis(
+    plotLines = list(
+      list(
+        value = 25,
+        color = "gray",
+        dashStyle = 'longdashdot',
+        width = 2,
+        label = list(
+          text = "Hoje (T = 25)",
+          style = list(color = "black", fontWeight = "bold")
+        )
+      )
+    )
+  ) %>% 
+  hc_colors(c("#910000","#1aadce", "black")) %>% 
+  hc_yAxis(
+    title = list(text = "Total de Casos")
+  ) %>% 
+  hc_title(
+    text = paste0(
+      "<b style='display: block; font-size: 15px;'>",
+      "Total de Casos de Dengue no Tempo por Modelo",
+      "</b>"
+    ),
+    margin = 20,
+    align = "center",
+    style = list(useHTML = TRUE)
+  ) %>% 
+  hc_exporting(
+    enabled = TRUE, 
+    buttons = list(
+      contextButton = list(
+        menuItems = list('downloadCSV', 'downloadSVG')
+      )
+    )
+  ) %>% 
+  hc_subtitle(
+    text = paste0(
+      "Modelo 1: Estimativas SEM estrutura de Atraso na Notificação", "<br>",
+      "Modelo 2: Estimativas COM estrutura de Atraso na Notificação"
+    )
+  ) 
+
+
+dados_comparacao_modelos = lambda_td_com_chute_longo %>% 
+  mutate(t = as.numeric(t)) %>% 
+  left_join(dados_estimados, by = c("t", "delay", "d")) %>% 
+  rename("Estimativa - Modelo 1" = "lambda_td",
+         "Estimativa - Modelo 2" = "value") %>% 
+  left_join(dados_dengue_longo %>% 
+              mutate(d = as.character(d)), by = c("t", "delay", "d")) %>% 
+  pivot_longer(cols = c(3,5,6))
+
+
+
+formatacao_grafico_compara_modelos = function(dados_plot, num_delay){
+  
+  dados_plot %>% 
+    hchart(
+      'line',
+      hcaes(x = t, y = value, group = name),marker = F,
+      showInLegend = T
+    ) %>% 
+    hc_xAxis(
+      plotLines = list(
+        list(
+          value = 25,
+          color = "gray",
+          dashStyle = 'longdashdot',
+          width = 2,
+          label = list(
+            text = "Hoje (T = 25)",
+            style = list(color = "black", fontWeight = "bold")
+          )
+        )
+      )
+    ) %>% 
+    hc_colors(c("#910000","#1aadce", "black")) %>% 
+    hc_yAxis(
+      title = list(text = "Quantidade de Casos")
+    ) %>% 
+    hc_subtitle(
+      text = paste0(
+        "Modelo 1: Estimativas SEM estrutura de Atraso na Notificação", "<br>",
+        "Modelo 2: Estimativas COM estrutura de Atraso na Notificação"
+      )
+    ) %>% 
+    hc_title(
+      text = paste0(
+        "<b style='display: block; font-size: 15px;'>",
+        "Casos de Dengue no Tempo por Modelo - ",num_delay,"unidade(s) de Atraso",
+        "</b>"
+      ),
+      margin = 20,
+      align = "center",
+      style = list(useHTML = TRUE)
+    ) %>% 
+    hc_exporting(
+      enabled = TRUE, 
+      buttons = list(
+        contextButton = list(
+          menuItems = list('downloadCSV', 'downloadSVG')
+        )
+      )
+    ) 
+  
+}
+
+# convergencia parametros ======================================================
+
+#estimativas_com_chute
+
+#ts.plot(estimativas_com_chute$b_beta)
+# ts.plot(estimativas_com_chute$b_beta[1:sample_size])
+# plot(estimativas_com_chute$b_beta[1:sample_size], type = "l")
+# 
+# ts.plot(estimativas_com_chute$lambda[1:sample_size])
+# plot(density(estimativas_com_chute$lambda))
+# acf(estimativas_com_chute$lambda)
+# 
+# plot(density(estimativas_com_chute$alpha))
+# acf(estimativas_com_chute$alpha)
+# 
+# plot(density(estimativas_com_chute$a_alpha))
+# acf(estimativas_com_chute$a_alpha)
+# 
+# plot(density(estimativas_com_chute$b_alpha))
+# acf(estimativas_com_chute$b_alpha)
+# 
+# plot(density(estimativas_com_chute$c_alpha))
+# acf(estimativas_com_chute$c_alpha)
+# 
+# plot(density(estimativas_com_chute$f_alpha))
+# acf(estimativas_com_chute$f_alpha)
+# 
+# plot(density(estimativas_com_chute$beta))
+# acf(estimativas_com_chute$beta)
+# 
+# plot(density(estimativas_com_chute$b_beta))
+# acf(estimativas_com_chute$b_beta)
+# 
+# plot(density(estimativas_com_chute$theta))
+# acf(estimativas_com_chute$theta)
+# 
+# plot(density(estimativas_com_chute$a_theta))
+# acf(estimativas_com_chute$a_theta)
+# 
+# plot(density(estimativas_com_chute$b_theta))
+# acf(estimativas_com_chute$b_theta)
+# 
+# plot(density(estimativas_com_chute$c_theta))
+# acf(estimativas_com_chute$c_theta)
+# 
+# plot(density(estimativas_com_chute$f_theta))
+# acf(estimativas_com_chute$f_theta)
+# 
+# plot(density(estimativas_com_chute$psi))
+# acf(estimativas_com_chute$psi)
+# 
+# mean(estimativas$lambda) 
+# mean(estimativas$theta)
+
+# Variacao em T (hoje) =========================================================
+
+# estimativas_T15 = readRDS("estimativas/estimativas_n_td_por_delay_T15.rds")
+# abcf_por_dalay_T15 = readRDS("estimativas/abcf_por_dalay_T15.rds")
+# estimativas_theta_T15 = readRDS("estimativas/estimativas_theta_T15.rds")
+# 
+# ic_mu_theta_T15 = HPDinterval(mcmc(estimativas_theta_T15$mu), prob = 0.99) %>% 
+#   as.data.frame() %>% 
+#   mutate(t = 1:T)
+# 
+# 
+# 
+# genLog = function(t, a, b, c, f, logScale = TRUE){
+#   logV = log(f)+log(a)+log(c)-(c*t)-(f+1)*log( b+exp(-c*t) )
+#   if (logScale){
+#     return(logV);
+#   } else {
+#     return(exp(logV));
+#   }
+# }
+# 
+# theta_inicial_T15 = genLog(t = 1:T,
+#                        a = mean(estimativas_theta_T15$a),
+#                        b = mean(estimativas_theta_T15$b),
+#                        c = mean(estimativas_theta_T15$c),
+#                        f = mean(estimativas_theta_T15$f),
+#                        logScale = F)
+# 
+# dados_dengue$N_t = rowSums(dados_dengue, na.rm = T)
+# 
+# calcula_mae_e_rmse = function(valores_estimados, valores_reais){
+#   
+#   erros = valores_estimados - valores_reais
+#   rmse = sqrt(mean(erros^2))
+#   mae = mean(abs(erros))
+#   
+#   return(
+#     paste0("MAE=", round(mae, 2), " RMSE=", round(rmse,2))
+#   )
+#   
+# }
+# 
+# 
+# plot_N_t_inical = dados_dengue_real %>% 
+#   bind_cols(theta_t = theta_inicial_T15) %>% 
+#   mutate(t = 1:T) %>% 
+#   pivot_longer(cols = 12:13) %>% 
+#   hchart('line', hcaes(x = t, 
+#                        y = value, 
+#                        group = name),marker = F,
+#          showInLegend = T,
+#          tooltip = list(pointFormat = paste0(
+#            'Total de casos no tempo {point.t}:</span> <b>{point.y:,.0f}</b><br>')
+#          )
+#   ) %>% 
+#   formatacao_grafico(titulo = "Total de Casos reais e estimados de Dengue no Tempo",
+#                      titulo_x = "Tempo t",
+#                      titulo_y = "Total de Casos") %>% 
+#   hc_add_series(data = ic_mu_theta,
+#                 type = "arearange",
+#                 hcaes(x = t, low = lower, high = upper),
+#                 marker = F,
+#                 color = "#BEBEBE",
+#                 name = "IC 99%",
+#                 tooltip = list(pointFormat = paste0(
+#                   "IC 99% no tempo {point.t}: <b> = [{point.lower:,.2f}; {point.upper:,.2f}]</b><br>"
+#                 ))
+#   ) %>% 
+#   hc_subtitle(
+#     text = "Estimativa sem incorporar estrutura de Atraso na Notificação"
+#   ) %>% 
+#   hc_credits(enabled = TRUE,
+#              text = calcula_mae_e_rmse(
+#                valores_reais = dados_dengue$N_t,
+#                valores_estimados = theta_inicial
+#              )) %>% 
+#   hc_xAxis(
+#     plotLines = list(
+#       list(
+#         value = 25,
+#         color = "gray",
+#         dashStyle = 'longdashdot',
+#         width = 2,
+#         label = list(
+#           text = "Hoje (t = 25)",
+#           style = list(color = "black", fontWeight = "bold")
+#         )
+#       )
+#     )
+#   )
+# 
+
 
 

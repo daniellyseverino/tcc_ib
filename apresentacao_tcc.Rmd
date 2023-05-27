@@ -12,7 +12,7 @@ output:
   
 ```{r include=FALSE}
 
-source("apresentacao/global.R", encoding = "UTF-8")
+source("apresentacao/global_tcc.R", encoding = "UTF-8")
 
 
 ```
@@ -61,6 +61,41 @@ $n_{t,d}$:&nbsp; Número de eventos ocorridos no tempo $t$ registrados após $d$
 
 $N_{t} = \sum_{d=0}^{D} n_{t,d}$:&nbsp; Número total de eventos ocorridos no tempo $t$
 
+# Estrutura da base de dados
+
+```{r echo=FALSE}
+
+tags$div(
+  class="grid grid-pad",
+tags$div(
+    style = "width: 100%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    tags$img(
+        src = "./tabela.png", 
+        style="float: center; border-radius: 5px;display: block;
+    margin: 0 auto;",
+        width="900", height="500"
+      )
+  )
+)
+
+```
+
+# Estrutura da base de dados
+
+Por definição,
+
+$$N_{t} =  \sum_{d = 0}^{D} n_{t,d}$$
+
+E, consequentemente, 
+
+$$n_{t,d} = N_{t} - \sum_{d = 1}^{D} n_{t,d}$$
+para $t = 1, ..., T$ e $d = 0,1,...,D$. 
+
+Ou seja, a partir dos dados para &nbsp;$d = 1,...,D$&nbsp; podemos obter os valores de  &nbsp;$n_{t,d=0}$. &nbsp; Dessa forma, não é possível ajustar um modelo para todos os atrasos. 
+
+Por isso, vamos ajustar o modelo para &nbsp;$n_{t,d}$&nbsp; de &nbsp;$d = 1,...,D$&nbsp; e &nbsp;$N_{t}$&nbsp; com &nbsp;$t = 1, ..., T+H$.
 
 # Estrutura dos casos reais de dengue
 
@@ -69,9 +104,6 @@ $N_{t} = \sum_{d=0}^{D} n_{t,d}$:&nbsp; Número total de eventos ocorridos no te
 
 tags$div(
   class="grid grid-pad",
-  
-  
-  
   
   tags$div(
     style = "width: 50%; min-height: 1px;
@@ -88,7 +120,7 @@ tags$div(
     style = "width: 50%; min-height: 1px;
     padding-right: 0px; margin: 0px;",
     class="col-",
-    plot_n_td %>% 
+    plot_n_td_completo %>% 
   hc_chart(
     zoomBySingleTouch = TRUE,
     zoomType = 'x'
@@ -125,41 +157,35 @@ tags$div(
 
 # Modelo proposto com estrutura de atraso independente
 
-Para cada atraso distinto de notificação foi ajustado um modelo de $n_{t,d}$ com as seguintes especificações:
+No modelo com estrutura de atraso independente cada atraso distinto de notificação foi ajustado conforme as especificações abaixo.
 
-$$n_{t,d} \sim Poisson(\lambda_{t,d})$$
-$$log(\lambda_{t,d}) = \alpha_{t,d}$$
-$$exp(\alpha_{t,d}) = \dfrac{a_{d} \; c_{d}\; f_{d}\; \exp(-c_{d}\;t)}
-{[b_{d} + \exp(-c_{d}\;t)]^ { f_{d} + 1} }$$
+Modelo proposto para os dados:
 
-Para $t = 1, ..., T$ e $d = 0,1,...,D$, onde
+$$\begin{align} 
+& n_{t,d} \sim Poisson(\lambda_{t,d}) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; N_{t} \sim Poisson(\theta_{t}) \\
+\\
+& log(\lambda_{t,d}) = \alpha_{t,d} \\
+\\
+& exp(\alpha_{t,d}) = \dfrac{a_{d} \; c_{d}\; f_{d}\; \exp(-c_{d}\;t)}
+{[b_{d} + \exp(-c_{d}\;t)]^ { f_{d} + 1} } \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; exp(\theta_{t}) = \dfrac{a \;c \;f \exp(-c\;t)}{[b + \exp(-c\;t)]^ { f + 1} } \\
+\end{align}$$
 
-$$a_{d} \sim Gama(0.1, 0.1) $$
-
-$$b_{d} \sim Normal(0, \sqrt{20}) $$
+Para &nbsp;$t = 1, ..., T+H$&nbsp; e &nbsp;$d = 1,...,D$.
 
 
-$$c_{d} \sim Gama(2, 9) $$
+Distribuições a priori:
 
-$$f_{d} \sim Gama(0.01, 0.01) $$
+$$\begin{align} 
+& a_{d} \sim Gama(0.1, 0.1) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; a \sim Gama(0.1, 0.1) \\
+\\
+& b_{d} \sim Normal(0, \sqrt{20}) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; b \sim Normal(0, \sqrt{20}) \\
+\\
+& c_{d} \sim Gama(2, 9) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; c \sim Gama(2, 9) \\
+\\
+& f_{d} \sim Gama(0.01, 0.01) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; f \sim Gama(0.01, 0.01) \\
+\end{align}$$
 
-Para obter as estimativas do total de casos ($N_{t}$) o modelo foi ajustado utilizando a soma dos casos relatados em todos os períodos de atraso nas notificações. 
 
-$$N_{t} =  \sum_{d = 0}^{D} n_{t,d}$$
-
-$$N_{t} \sim Poisson(\theta_{t})$$
-
-$$exp(\theta_{t}) = \dfrac{a \;c \;f \exp(-c\;t)}{[b + \exp(-c\;t)]^ { f + 1} }$$
-
-Para $t = 1, ..., 35$, onde
-
-$$a \sim Gama(0.1, 0.1) $$
-
-$$c \sim Gama(2, 9) $$
-
-$$f \sim Gama(0.01, 0.01) $$
-
-$$b \sim Normal(0, \sqrt{20}) $$
 
 # Densidades das distribuições a priori
 
@@ -199,7 +225,7 @@ tags$div(
 ```
 
 
-# Estimativas iniciais sem incorporar estrutura de atraso na notificação
+# Estimativas iniciais com estrutura de atraso independente
 
 ```{r echo=FALSE}
 
@@ -241,36 +267,42 @@ tags$div(
 
 ```
 
-# Modelo proposto incorporando estrutura de atraso na notificação
 
-Modelo proposto para $N_{t}$
+# Modelo proposto com estrutura conjunta de atraso na notificação
 
-$$N_{t} \sim Poisson(\theta_{t})$$
+Modelo proposto para os dados:
 
-$$\theta_{t} = \dfrac{a_{\theta}\; c_{\theta}\; f_{\theta} \exp(-c_{\theta}\;t)}
+$$n_{t,d} \sim Poisson(\lambda_{t,d}) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; N_{t} \sim Poisson(\theta_{t})$$
+
+$$log(\lambda_{t,d}) = \alpha_{t} + \beta_{d} \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; $$
+
+
+$$exp(\alpha_{t}) = \dfrac{a_{\alpha}\; c_{\alpha}\; f_{\alpha} \exp(-c_{\alpha}\;t)}
+{[b_{\alpha} + \exp(-c_{\alpha}\;t)]^ { f_{\alpha} + 1} }  \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; \theta_{t} = \dfrac{a_{\theta}\; c_{\theta}\; f_{\theta} \exp(-c_{\theta}\;t)}
 {[b_{\theta} + \exp(-c_{\theta}\;t)]^ { f_{\theta} + 1} }$$
 
-
-Modelo proposto para $n_{t,d}$
-
-$$n_{t,d} \sim Poisson(\lambda_{t,d})$$
-
-$$log(\lambda_{t,d}) = \alpha_{t} + \beta_{d}$$
-$$exp(\alpha_{t}) = \dfrac{a_{\alpha}\; c_{\alpha}\; f_{\alpha} \exp(-c_{\alpha}\;t)}
-{[b_{\alpha} + \exp(-c_{\alpha}\;t)]^ { f_{\alpha} + 1} }$$
-
-$$\beta_{d} = \gamma d$$
-Para $t = 1, ..., T$, e $d = 1, ..., D$, onde
+Para $t = 1, ..., T+H$ e $d = 1, ..., D$
 
 
-$$\gamma \sim Normal(0,100)$$
-$$b_{\theta} = Exp(Normal(0,\sqrt{20}))$$
+$$\beta_{d} = \gamma d  \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; $$
+
+Distribuições a priori:
+
+$$a_{\alpha} \sim Gama(0.1, 0.1)  \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; a_{\theta} \sim Gama(0.1, 0.1) $$
+
+$$Exp(b_{\alpha}) \sim Normal(0,\sqrt{20}) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; Exp(b_{\theta}) \sim Normal(0,\sqrt{20})$$
+
+$$c_{\alpha} \sim Gama(2, 9)  \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; c_{\theta} \sim Gama(2, 9) $$
+
+$$f_{\alpha} \sim Gama(0.01, 0.01)  \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; f_{\theta} \sim Gama(0.01, 0.01) $$
+
+$$\gamma \sim Normal(0,100) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; $$
+
 Destaca-se que:
 
-$$n_{t,d} = N_{t} - \sum_{d = 1}^{D} n_{t,d}$$
 $$\theta_{t} > \sum_{d = 1}^{D} \lambda_{t,d}$$
 
-# Estimativas incorporando estrutura de atraso na notificação
+# Estimativas com estrutura conjunta de atraso na notificação
 
 ```{r echo=FALSE}
 tags$div(
@@ -318,7 +350,8 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d1"),
       num_delay = 1,
-      estimativas_lambda = estimativas_com_chute$lambda) %>% 
+      estimativas_lambda = estimativas_com_chute$lambda,
+      hoje = 25) %>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
         zoomType = 'y'
@@ -333,7 +366,8 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d2"),
       num_delay = 2,
-      estimativas_lambda = estimativas_com_chute$lambda) %>% 
+      estimativas_lambda = estimativas_com_chute$lambda,
+      hoje = 25) %>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
         zoomType = 'y'
@@ -348,7 +382,8 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d3"),
       num_delay = 3,
-      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      estimativas_lambda = estimativas_com_chute$lambda,
+      hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
         zoomType = 'y'
@@ -362,7 +397,8 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d4"),
       num_delay = 4,
-      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      estimativas_lambda = estimativas_com_chute$lambda,
+      hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
         zoomType = 'y'
@@ -377,7 +413,8 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d5"),
       num_delay = 5,
-      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      estimativas_lambda = estimativas_com_chute$lambda,
+      hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
         zoomType = 'y'
@@ -392,7 +429,8 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d6"),
       num_delay = 6,
-      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      estimativas_lambda = estimativas_com_chute$lambda,
+      hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
         zoomType = 'y'
@@ -407,7 +445,8 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d7"),
       num_delay = 7,
-      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      estimativas_lambda = estimativas_com_chute$lambda,
+      hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
         zoomType = 'y'
@@ -422,7 +461,8 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d8"),
       num_delay = 8,
-      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      estimativas_lambda = estimativas_com_chute$lambda,
+      hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
         zoomType = 'y'
@@ -437,7 +477,8 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d9"),
       num_delay = 9,
-      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      estimativas_lambda = estimativas_com_chute$lambda,
+      hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
         zoomType = 'y'
@@ -452,7 +493,8 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d10"),
       num_delay = 10,
-      estimativas_lambda = estimativas_com_chute$lambda)%>% 
+      estimativas_lambda = estimativas_com_chute$lambda,
+      hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
         zoomType = 'y'
@@ -467,7 +509,7 @@ tags$div(
 
 ```
 
-# Comparação dos modelos
+# Comparação dos modelos com estrutura independente e conjunta de atraso na notificação
 
 ```{r echo=FALSE}
 tags$div(
@@ -652,39 +694,73 @@ tags$div(
 ```
 
 
-# Modelo proposto incorporando estrutura de atraso na notificação 
+# Erros de estimação e previsão
 
-Modelo proposto para $N_{t}$
+De acordo com o modelo ajustado devemos avaliar o erro de estimação pata $t = 1,..., T$ e o erro de previsão para $t = T, ..., T+H$. Uma forma de contabilizar esses erros é através das métricas MAE e RMSE.
 
-$$N_{t} \sim BN(\theta_{t}, \phi)$$
+Mean Absolute Error Estimation (MAE):
 
-$$\theta_{t} = \dfrac{a_{\theta} \;c_{\theta} \;f_{\theta} \exp(-c_{\theta}\;t)}
-{[b_{\theta} + \exp(-c_{\theta}\;t)]^ { f_{\theta} + 1} }$$
+$$\frac{\sum_{t = 1}^{T} |\hat{\theta_{t}} - \theta_{t}|}{T}  $$
+
+Root Mean Squared Error Estimation (RMSE):
+
+$$\sqrt{ \frac{\sum_{t = 1}^{T} (\hat{\theta_{t}} - \theta_{t})^2}{T}  }$$
+
+Mean Absolute Error Prevision (MAE):
+
+$$\frac{\sum_{t = T}^{T+H} |\hat{y_{t}} - y_{t}|}{H}  $$
+
+Root Mean Squared Error Prevision (RMSE):
+
+$$\sqrt{ \frac{\sum_{t = T}^{T+H} (\hat{y_{t}} - y_{t})^2}{H}  }$$
+
+O MAE e RMSE medem a magnitude média dos erros em um conjunto de previsões. 
+
+O RMSE dá um peso maior para erros grandes. Além disso, o RMSE sempre será maior ou igual ao MAE e quanto maior a diferença entre eles, maior a variância dos erros individuais nos dados. Se MAE = RMSE, então todos os erros são da mesma magnitude. 
+
+# Erros de estimação e previsão
 
 
-Modelo proposto para $n_{t,d}$
-
-$$n_{t,d} \sim BN(\lambda_{t,d}, \sigma)$$
-
-$$log(\lambda_{t,d}) = \alpha_{t} + \beta_{d}$$
-$$exp(\alpha_{t}) = \dfrac{a_{\alpha} \;c_{\alpha}\; f_{\alpha} \exp(-c_{\alpha}\;t)}
-{[b_{\alpha} + \exp(-c_{\alpha}\;t)]^ { f_{\alpha} + 1} }$$
-
-$$\beta_{d} = \gamma d$$
-Para $t = 1, ..., T$, e $d = 1, ..., D$, onde
-
-
-$$\gamma \sim Normal(0,100)$$
-$$b_{\theta} = Exp(Normal(0,\sqrt{20}))$$
-Destaca-se que:
-
-$$n_{t,d} = N_{t} - \sum_{d = 1}^{D} n_{t,d}$$
-$$\theta_{t} > \sum_{d = 1}^{D} \lambda_{t,d}$$
 # Avaliando convergência dos parâmetros
+
+```{r echo=FALSE}
+
+tags$div(
+  class="grid grid-pad",
+  
+  tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_a_theta %>% hc_size(height = 200),
+    plot_a_alpha %>% hc_size(height = 200)
+  ),
+  tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_c_theta %>% hc_size(height = 200),
+    plot_c_alpha %>% hc_size(height = 200)
+  ),
+  tags$div(
+    style = "width: 33%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_f_theta %>% hc_size(height = 200),
+    plot_f_alpha %>% hc_size(height = 200)
+  )
+
+  
+)
+
+```
 
 
 
 # Referências
+
+MAE e RMSE:
+<https://resources.eumetrain.org/data/4/451/english/msg/ver_cont_var/uos3/uos3_ko1.htm#:~:text=The%20MAE%20is%20a%20linear,weighted%20equally%20in%20the%20average.&text=The%20RMSE%20is%20a%20quadratic,in%20both%20of%20the%20references.>
 
 # 
 

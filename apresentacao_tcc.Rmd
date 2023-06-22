@@ -4,7 +4,7 @@ author:
   - "Aluna: Danielly Santos Severino (danyss@ufmg.br)"
   - "Orientador: Dani Gamerman (danig@ufmg.br)"
   - "Co-Orientadora: Izabel Nolau (nolau@dme.ufrj.br)"
-date: "`r Sys.Date()`"
+date: "26/06/2023"
 output: 
   slidy_presentation:
     css : ./assets/css/style.css
@@ -12,56 +12,11 @@ output:
   
 ```{r include=FALSE}
 
-source("apresentacao/global_tcc.R", encoding = "UTF-8")
-
+source("global/global.R", encoding = "UTF-8")
 
 ```
 
-
-```{r include=FALSE}
-# tags$div(
-#   class="grid grid-pad",
-#   
-#   tags$div(
-#     style = "width: 33%; min-height: 1px;
-#     padding-right: 0px; margin: 0px;",
-#     class="col-",
-#     tags$img(
-#         src = "./assets/img/Brasil.png",
-#         style="float: left; border-radius: 5px;display: block;
-#     margin: 0 auto;",
-#         width="100", height="80"
-#       ),
-#     plot_eff_visit_in_br %>% hc_size(height = 250)
-#   ),
-#   tags$div(
-#     style = "width: 100%; min-height: 1px;
-#     padding-right: 0px; margin: 0px;margin-bottom: 10px;",
-#     class="col-",
-#     tags$h4(style = "font-size:12px; padding: 0px; margin-bottom: 0px;margin-left: 10px;",
-#             "Effectiveness of Tasks not Simple in BR"),
-#     HTML(tab_eff_visitas_in_br)
-#   )
-# 
-#   
-# )
-```
-
-# Notação
-
-$T$:&nbsp; Tempo atual
-
-$t$:&nbsp; Índice do tempo, variando em $\{1,2, ..., T+H\}$
-
-$D$:&nbsp; Atraso máximo relevante
-
-$d$:&nbsp; Índice do atraso, variando em $\{0, 1, ..., D\}$
-
-$n_{t,d}$:&nbsp; Número de eventos ocorridos no tempo $t$ registrados após $d$ unidades de tempo
-
-$N_{t} = \sum_{d=0}^{D} n_{t,d}$:&nbsp; Número total de eventos ocorridos no tempo $t$
-
-# Estrutura da base de dados
+# Introdução
 
 ```{r echo=FALSE}
 
@@ -72,7 +27,61 @@ tags$div(
     padding-right: 0px; margin: 0px;",
     class="col-",
     tags$img(
-        src = "./tabela.png", 
+        src = "./assets/img/introducao/Slide1.png", 
+        style="float: center; border-radius: 5px;display: block;
+    margin: 0 auto;",
+        width="1000", height="550"
+      )
+  )
+)
+
+```
+
+# Introdução
+
+```{r echo=FALSE}
+
+tags$div(
+  class="grid grid-pad",
+tags$div(
+    style = "width: 100%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    tags$img(
+        src = "./assets/img/introducao/Slide2.png", 
+        style="float: center; border-radius: 5px;display: block;
+    margin: 0 auto;",
+        width="1000", height="550"
+      )
+  )
+)
+
+```
+
+
+# Objetivos 
+
+* Ajustar modelos para séries temporais incorporando atraso na notificação.
+
+* Verificar qualidade de ajuste dos modelos.
+
+* Avaliar erros de ajuste e erros de previsão dos modelos.
+
+* Comparar estimativas, erros de ajuste e erros de previsão entre diferentes modelos.
+
+
+# Estrutura típica dos dados com atraso na notificação
+
+```{r echo=FALSE}
+
+tags$div(
+  class="grid grid-pad",
+tags$div(
+    style = "width: 100%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    tags$img(
+        src = "./assets/img/tabela/Slide1.png", 
         style="float: center; border-radius: 5px;display: block;
     margin: 0 auto;",
         width="900", height="500"
@@ -82,112 +91,132 @@ tags$div(
 
 ```
 
-# Estrutura da base de dados
+$T$:&nbsp; Tempo atual. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $D$:&nbsp; Atraso máximo relevante. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $H$:&nbsp; Horizonte máximo de previsão.
 
-Por definição,
+$n_{t,d}$:&nbsp; Número de eventos ocorridos no tempo $t$ registrados após $d$ unidades de tempo.
+
+$N_{t} = \sum_{d=0}^{D} n_{t,d}$:&nbsp; Número total de eventos ocorridos no tempo $t$.
+
+
+# Estrutura típica dos dados com atraso na notificação
+
+Por definição, existe uma estrutura de dependência entre os dados já que
 
 $$N_{t} =  \sum_{d = 0}^{D} n_{t,d}$$
 
 E, consequentemente, 
 
-$$n_{t,d} = N_{t} - \sum_{d = 1}^{D} n_{t,d}$$
-para $t = 1, ..., T$ e $d = 0,1,...,D$. 
+$$n_{t,0} = N_{t} - \sum_{d = 1}^{D} n_{t,d}$$
+para $t = 1, ..., T, T+1, ..., T+H$. 
 
-Ou seja, a partir dos dados para &nbsp;$d = 1,...,D$&nbsp; podemos obter os valores de  &nbsp;$n_{t,d=0}$. &nbsp; Dessa forma, não é possível ajustar um modelo para todos os atrasos. 
+Portanto, não é possível especificar um modelo para $N_{t}$ e $n_{t,d}$ incorporando todos os atrasos ao mesmo tempo respeitando a disposição dos dados.
 
-Por isso, vamos ajustar o modelo para &nbsp;$n_{t,d}$&nbsp; de &nbsp;$d = 1,...,D$&nbsp; e &nbsp;$N_{t}$&nbsp; com &nbsp;$t = 1, ..., T+H$.
-
-# Estrutura dos casos reais de dengue
-
-```{r echo=FALSE}
+Como $n_{t,0}$ são as contagens sem nenhum atraso, pode ser mais interessante especificar um modelo para $N_{t}$ e $n_{t,d}$ com $d = 1,...,D$ e $t = 1, ..., T, T+1, ..., T+H$. 
 
 
-tags$div(
-  class="grid grid-pad",
+# Metodologia
+
+* Modelos hierárquicos com abordagem bayesiana:
   
-  tags$div(
-    style = "width: 50%; min-height: 1px;
-    padding-right: 0px; margin: 0px;",
-    class="col-",
-    plot_N_t_completo %>% 
-  hc_chart(
-    zoomBySingleTouch = TRUE,
-    zoomType = 'x'
-  ) %>% hc_size(height = 350)
-  ),
+  * Estrutura de atraso na notificação independente.
   
-  tags$div(
-    style = "width: 50%; min-height: 1px;
-    padding-right: 0px; margin: 0px;",
-    class="col-",
-    plot_n_td_completo %>% 
-  hc_chart(
-    zoomBySingleTouch = TRUE,
-    zoomType = 'x'
-  ) %>% hc_size(height = 400)
-  ),
-  
-  tags$div(
-    style = "width: 50%; min-height: 1px;
-    padding-right: 0px; margin-left: 0px;",
-    class="col-",
-    N_t_atualizacao %>% 
-  hc_chart(
-    zoomBySingleTouch = TRUE,
-    zoomType = 'x'
-  ) %>% hc_size(height = 500)
-  ),
-  
-  tags$div(
-    style = "width: 50%; min-height: 1px;
-    padding-right: 0px; margin-left: 0px;",
-    class="col-",
-    plot_estrutura_delay_tempo %>% 
-  hc_chart(
-    zoomBySingleTouch = TRUE,
-    zoomType = 'x'
-  ) %>%
-    hc_yAxis(min = -10, max = 10) %>% hc_size(height = 500)
-  )
+  * Estrutura de atraso na notificação conjunta.
 
-  
-)
+* Estimação pontual e intervalar.
 
-```
+* Previsão:
+
+  * Nowcasting: Previsão para as contagens parciais.
+
+  * Forecasting: Previsão para os casos futuros.
+  
+  
+
+O método de Monte Carlo via Cadeias de Markov (MCMC) foi utilizado como técnica de extração de amostras para aproximar as densidades a posteriori das quantidades de interesse. Destaca-se que no MCMC, por ser um modelo altamente não linear, precisamos contar com a ajuda de bons pontos de partida para obter estimativas e previsões adequadas.
+
+Para obter as estimativas e previsões intervalares foi utilizado o intervalo HPD (Highest Posterior Density), uma vez que esse é o intervalo de credibilidade mais estreito que contém uma proporção específica baseado na distribuição a posteriori.
+
+A operacionalização foi realizada via STAN e R (versão 4.3.1).
 
 # Modelo proposto com estrutura de atraso independente
 
-No modelo com estrutura de atraso independente cada atraso distinto de notificação foi ajustado conforme as especificações abaixo.
+O modelo com estrutura de atraso na notificação independente (MI) foi ajustado conforme as especificações abaixo.
+
 
 Modelo proposto para os dados:
 
 $$\begin{align} 
 & n_{t,d} \sim Poisson(\lambda_{t,d}) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; N_{t} \sim Poisson(\theta_{t}) \\
 \\
-& log(\lambda_{t,d}) = \alpha_{t,d} \\
-\\
-& exp(\alpha_{t,d}) = \dfrac{a_{d} \; c_{d}\; f_{d}\; \exp(-c_{d}\;t)}
-{[b_{d} + \exp(-c_{d}\;t)]^ { f_{d} + 1} } \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; exp(\theta_{t}) = \dfrac{a \;c \;f \exp(-c\;t)}{[b + \exp(-c\;t)]^ { f + 1} } \\
+& \lambda_{t,d} = \exp(\alpha_{t,d}) =  \dfrac{a_{d} \; c_{d}\; f_{d}\; \exp(-c_{d}\;t)}
+{[b_{d} + \exp(-c_{d}\;t)]^ { f_{d} + 1} } \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; \theta_{t} = \dfrac{a \;c \;f \exp(-c\;t)}{[b + \exp(-c\;t)]^ { f + 1} }\\
 \end{align}$$
 
-Para &nbsp;$t = 1, ..., T+H$&nbsp; e &nbsp;$d = 1,...,D$.
+Para &nbsp;$t = 1, ..., T, T+1, ..., T+H$&nbsp; e &nbsp;$d = 1,...,D$.
+
+Onde,
+
+$$\theta_{t} > \sum_{d = 1}^{D} \lambda_{t,d}$$
+
+Distribuições a priori:
+
+$$\begin{align} 
+& a_{d} \sim Gama(0.1, 0.1) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; a \sim Gama(0.1, 0.1) \\
+\\
+& \exp(b_{d}) \sim Normal(0, \sqrt{20}) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; \exp(b) \sim Normal(0, \sqrt{20}) \\
+\\
+& c_{d} \sim Gama(2, 9) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; c \sim Gama(2, 9) \\
+\\
+& f_{d} \sim Gama(0.01, 0.01) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; f \sim Gama(0.01, 0.01) \\
+\end{align}$$
+
+
+
+# Modelo proposto com estrutura conjunta de atraso na notificação
+
+O modelo com estrutura de atraso na notificação conjunta (MC) foi ajustado conforme as especificações abaixo.
+
+Modelo proposto para os dados:
+
+$$\begin{align} 
+& n_{t,d} \sim Poisson(\lambda_{t,d}) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; N_{t} \sim Poisson(\theta_{t}) \\
+\\
+& log(\lambda_{t,d}) = \alpha_{t} + \beta_{d} \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; \theta_{t} = \dfrac{a_{\theta}\; c_{\theta}\; f_{\theta} \exp(-c_{\theta}\;t)}
+{[b_{\theta} + \exp(-c_{\theta}\;t)]^ { f_{\theta} + 1} } \\
+\\
+& \exp(\alpha_{t}) = \dfrac{a_{\alpha}\; c_{\alpha}\; f_{\alpha} \exp(-c_{\alpha}\;t)}
+{[b_{\alpha} + \exp(-c_{\alpha}\;t)]^ { f_{\alpha} + 1} }  \\
+\\
+& \beta_{d} = \gamma d \\
+\end{align}$$
+
+
+Para $t = 1, ..., T, T+1, ..., T+H$ e $d = 1, ..., D$.
+
+
+Onde,
+
+$$\theta_{t} > \sum_{d = 1}^{D} \lambda_{t,d}$$
 
 
 Distribuições a priori:
 
 $$\begin{align} 
-& a_{d} \sim Gama(0.1, 0.1) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; a \sim Gama(0.1, 0.1) \\
+& a_{\alpha} \sim Gama(0.1, 0.1) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; a_{\theta} \sim Gama(0.1, 0.1) \\
 \\
-& b_{d} \sim Normal(0, \sqrt{20}) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; b \sim Normal(0, \sqrt{20}) \\
+& \exp(b_{\alpha}) \sim Normal(0, \sqrt{20}) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; \exp(b_{\theta}) \sim Normal(0, \sqrt{20}) \\
 \\
-& c_{d} \sim Gama(2, 9) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; c \sim Gama(2, 9) \\
+& c_{\alpha} \sim Gama(2, 9) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; c_{\theta} \sim Gama(2, 9) \\
 \\
-& f_{d} \sim Gama(0.01, 0.01) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; f \sim Gama(0.01, 0.01) \\
+& f_{\alpha} \sim Gama(0.01, 0.01) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; f_{\theta} \sim Gama(0.01, 0.01) \\
+\\
+& \gamma \sim Normal(0,100) \\
 \end{align}$$
 
-
-
 # Densidades das distribuições a priori
+
+As distribuições a priori foram especificadas de acordo com as estimativas obtidas através de uma aplicação realizada anteriormente e apresentada em Bastos et al, 2019.
+
 
 ```{r echo=FALSE}
 
@@ -224,8 +253,156 @@ tags$div(
 
 ```
 
+# Comparação dos modelos - Erros de estimação e previsão
 
-# Estimativas iniciais com estrutura de atraso independente
+Umas das formas de comparar os modelos é contrastar os erros de estimação e previsão. Para isso, foram calculadas as métricas MAE (Mean Absolute Error) e RMSE (Root Mean Squared Error).
+
+
+MAE:
+
+$$\frac{\sum_{i = 1}^{n} |\hat{y_{i}} - y_{i}|}{n}  $$
+
+RMSE:
+
+$$\sqrt{ \frac{\sum_{i = 1}^{n} (\hat{y_{i}} - y_{i})^2}{n}  }$$
+
+O MAE e RMSE medem a magnitude média dos erros em um conjunto de estimações ou previsões. 
+
+O RMSE dá um peso maior para erros grandes. Além disso, o RMSE sempre será maior ou igual ao MAE e quanto maior a diferença entre eles, maior a variância dos erros individuais nos dados. Se MAE = RMSE, então todos os erros são da mesma magnitude. 
+
+Erros de estimação ou previsão para $n_{t,d}$: &nbsp; $y_{i}  = n_{t,d}$ &nbsp; e &nbsp; $\hat{y_{i}} = E(\lambda_{t,d}|n_{t,d})$
+
+Erros de estimação ou previsão para $N_{t}$: &nbsp; $y_{i} = N_{t}$ &nbsp; e &nbsp; $\hat{y_{i}} = E(\theta_{t}|N_{t})$.
+
+
+# Aplicação - Casos de dengue
+
+Estrutura dos casos reais de dengue no Rio de Janeiro entre janeiro de 2011 e abril de 2012.
+
+As notificações dos casos foram feitas semanalmente e foram avaliadas para 35 semanas no total, com no máximo 10 semanas de atraso.
+
+As contagens em vermelho foram omitidas para ajustar os modelos e verificar a qualidade das estimativas e previsões obtidas. 
+
+```{r echo=FALSE}
+
+
+tags$div(
+  class="grid grid-pad",
+  
+  tags$div(
+    style = "width: 55%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    tags$img(
+        src = "./assets/img/tabela/Slide2.png", 
+        style="float: center; border-radius: 5px;display: block;
+    margin: 0 auto;",
+        width="700", height="400"
+      )
+  ),
+  
+  tags$div(
+    style = "width: 45%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_N_t_completo %>% 
+  hc_chart(
+    zoomBySingleTouch = TRUE,
+    zoomType = 'x'
+  ) %>% hc_size(height = 400)
+  )#,
+  
+  # tags$div(
+  #   style = "width: 50%; min-height: 1px;
+  #   padding-right: 0px; margin: 0px;",
+  #   class="col-",
+  #   plot_n_td_completo %>% 
+  # hc_chart(
+  #   zoomBySingleTouch = TRUE,
+  #   zoomType = 'x'
+  # ) %>% hc_size(height = 400)
+  # )
+
+  
+)
+
+```
+
+# Aplicação - Casos de dengue
+
+```{r echo=FALSE}
+
+
+tags$div(
+  class="grid grid-pad",
+  
+  tags$div(
+    style = "width: 50%; min-height: 1px;
+    padding-right: 0px; margin-left: 0px;",
+    class="col-",
+    N_t_atualizacao %>% 
+  hc_chart(
+    zoomBySingleTouch = TRUE,
+    zoomType = 'x'
+  ) %>% hc_size(height = 500)
+  ),
+  
+  tags$div(
+    style = "width: 50%; min-height: 1px;
+    padding-right: 0px; margin-left: 0px;",
+    class="col-",
+    plot_estrutura_delay_tempo %>% 
+  hc_chart(
+    zoomBySingleTouch = TRUE,
+    zoomType = 'x'
+  ) %>%
+    hc_yAxis(min = -10, max = 10) %>% hc_size(height = 500)
+  )
+
+  
+)
+
+```
+
+Em Bastos et al, 2019 $\beta_{d}$ depende de $\beta_{d-1}$. Aqui, adicionamos uma restrição de que que $\beta_{d}$ é uma função linear dos atrasos.
+
+
+Bastos et al, 2019 define que a estrutura conjunta de atraso na notificação apresenta um mecanismo onde as contagens dependem dos valores observados para o atraso anterior.
+
+Aqui, adicionamos uma restrição de que os atrasos apresentam uma estrutura linear.
+
+# Estimativas e previões com estrutura de atraso independente
+
+```{r echo=FALSE}
+
+tags$div(
+  class="grid grid-pad",
+  
+  tags$div(
+    style = "width: 55%; min-height: 1px;
+    padding-right: 0px; margin: 0px; margin-top: 10px;",
+    class="col-",
+    tags$img(
+        src = "./assets/img/tabela/Slide3.png", 
+        style="float: center; border-radius: 2px;display: block;
+    margin: 0 auto;",
+        width="750", height="500"
+      )
+  ), 
+  
+  tags$div(
+    style = "width: 45%; min-height: 1px;
+    padding-right: 0px; margin: 0px; margin-top: 10px;",
+    class="col-",
+    plot_N_t_indep %>% hc_size(height = 500)
+  )
+  
+)
+
+
+```
+
+# Estimativas com estrutura de atraso independente
 
 ```{r echo=FALSE}
 
@@ -234,32 +411,16 @@ tags$div(
   
   tags$div(
     style = "width: 50%; min-height: 1px;
-    padding-right: 0px; margin: 0px;",
+    padding-right: 0px; margin: 0px; margin-top: 10px;",
     class="col-",
-    plot_N_t_inical %>% hc_size(height = 400)
+    plot_lamda_indep %>% hc_size(height = 450)
   ),
   
   tags$div(
     style = "width: 50%; min-height: 1px;
-    padding-right: 0px; margin: 0px;",
+    padding-right: 0px; margin: 0px; margin-top: 10px;",
     class="col-",
-    plot_lambda_td %>% hc_size(height = 400)
-  ),
-  
-  tags$div(
-    style = "width: 50%; min-height: 1px;
-    padding-right: 0px; margin: 0px;",
-    class="col-",
-    plot_estrutura_delay_estimativas %>% hc_size(height = 400)
-  ),
-
-  tags$div(
-    style = "width: 50%; min-height: 1px;
-    padding-right: 0px; margin: 0px;margin-bottom: 10px;",
-    class="col-",
-    tags$h4(style = "font-size:15px; padding: 0px; margin-bottom: 0px;margin-left: 25px;",
-            "Valores Reais (Valores Estimados)"),
-    HTML(tabela_estimativas_iniciais)
+    plot_estrutura_delay_estimativas %>% hc_size(height = 450)
   )
   
 )
@@ -268,75 +429,39 @@ tags$div(
 ```
 
 
-# Modelo proposto com estrutura conjunta de atraso na notificação
-
-Modelo proposto para os dados:
-
-$$n_{t,d} \sim Poisson(\lambda_{t,d}) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; N_{t} \sim Poisson(\theta_{t})$$
-
-$$log(\lambda_{t,d}) = \alpha_{t} + \beta_{d} \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; $$
+Observando os gráficos, parece que realmente há uma estrutura de decaimento no log com os atrasos nas notificações. Isso reforça a suposição de linearidade entre os atrasos.
 
 
-$$exp(\alpha_{t}) = \dfrac{a_{\alpha}\; c_{\alpha}\; f_{\alpha} \exp(-c_{\alpha}\;t)}
-{[b_{\alpha} + \exp(-c_{\alpha}\;t)]^ { f_{\alpha} + 1} }  \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; \theta_{t} = \dfrac{a_{\theta}\; c_{\theta}\; f_{\theta} \exp(-c_{\theta}\;t)}
-{[b_{\theta} + \exp(-c_{\theta}\;t)]^ { f_{\theta} + 1} }$$
-
-Para $t = 1, ..., T+H$ e $d = 1, ..., D$
-
-
-$$\beta_{d} = \gamma d  \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; $$
-
-Distribuições a priori:
-
-$$a_{\alpha} \sim Gama(0.1, 0.1)  \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; a_{\theta} \sim Gama(0.1, 0.1) $$
-
-$$Exp(b_{\alpha}) \sim Normal(0,\sqrt{20}) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; Exp(b_{\theta}) \sim Normal(0,\sqrt{20})$$
-
-$$c_{\alpha} \sim Gama(2, 9)  \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; c_{\theta} \sim Gama(2, 9) $$
-
-$$f_{\alpha} \sim Gama(0.01, 0.01)  \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; f_{\theta} \sim Gama(0.01, 0.01) $$
-
-$$\gamma \sim Normal(0,100) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; $$
-
-Destaca-se que:
-
-$$\theta_{t} > \sum_{d = 1}^{D} \lambda_{t,d}$$
-
-# Estimativas com estrutura conjunta de atraso na notificação
+# Estimativas e previsões com estrutura conjunta de atraso
 
 ```{r echo=FALSE}
 tags$div(
   class="grid grid-pad",
   
   tags$div(
-    style = "width: 50%; min-height: 1px;
-    padding-right: 0px; margin: 0px;",
+    style = "width: 55%; min-height: 1px;
+    padding-right: 0px; margin: 0px; margin-top: 10px;",
     class="col-",
-    plot_N_t_com_chute %>% hc_size(height = 400)
+    tags$img(
+        src = "./assets/img/tabela/Slide4.png", 
+        style="float: center; border-radius: 2px;display: block;
+    margin: 0 auto;",
+        width="750", height="500"
+      )
   ),
   
   tags$div(
-    style = "width: 50%; min-height: 1px;
-    padding-right: 0px; margin: 0px;",
+    style = "width: 45%; min-height: 1px;
+    padding-right: 0px; margin: 0px; margin-top: 10px;",
     class="col-",
-    plot_lamda_com_chute %>% hc_size(height = 400)
-  ),
-
-  tags$div(
-    style = "width: 50%; min-height: 1px;
-    padding-right: 0px; margin: 0px;margin-bottom: 10px;",
-    class="col-",
-    tags$h4(style = "font-size:15px; padding: 0px; margin-bottom: 0px;margin-left: 25px;",
-            "Valores Reais (Valores Estimados)"),
-    HTML(tabela_estimativas_com_chute)
+    plot_N_t_conj %>% hc_size(height = 500)
   )
-
   
 )
 
 ```
 
-# Comparando quantidades reais e estimadas por atraso na notificação
+# Estimativas e previsões com estrutura conjunta por atraso na notificação
 
 ```{r echo=FALSE}
 
@@ -350,11 +475,11 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d1"),
       num_delay = 1,
-      estimativas_lambda = estimativas_com_chute$lambda,
+      estimativas_lambda = estimativas_conjuntas$lambda,
       hoje = 25) %>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
-        zoomType = 'y'
+        zoomType = 'xy'
       ) %>%
       hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
@@ -366,11 +491,11 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d2"),
       num_delay = 2,
-      estimativas_lambda = estimativas_com_chute$lambda,
+      estimativas_lambda = estimativas_conjuntas$lambda,
       hoje = 25) %>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
-        zoomType = 'y'
+        zoomType = 'xy'
       ) %>%
       hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
@@ -382,11 +507,11 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d3"),
       num_delay = 3,
-      estimativas_lambda = estimativas_com_chute$lambda,
+      estimativas_lambda = estimativas_conjuntas$lambda,
       hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
-        zoomType = 'y'
+        zoomType = 'xy'
       ) %>%
       hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
@@ -397,11 +522,11 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d4"),
       num_delay = 4,
-      estimativas_lambda = estimativas_com_chute$lambda,
+      estimativas_lambda = estimativas_conjuntas$lambda,
       hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
-        zoomType = 'y'
+        zoomType = 'xy'
       ) %>%
       hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
@@ -413,11 +538,11 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d5"),
       num_delay = 5,
-      estimativas_lambda = estimativas_com_chute$lambda,
+      estimativas_lambda = estimativas_conjuntas$lambda,
       hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
-        zoomType = 'y'
+        zoomType = 'xy'
       ) %>%
       hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
@@ -429,11 +554,11 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d6"),
       num_delay = 6,
-      estimativas_lambda = estimativas_com_chute$lambda,
+      estimativas_lambda = estimativas_conjuntas$lambda,
       hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
-        zoomType = 'y'
+        zoomType = 'xy'
       ) %>%
       hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
@@ -445,11 +570,11 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d7"),
       num_delay = 7,
-      estimativas_lambda = estimativas_com_chute$lambda,
+      estimativas_lambda = estimativas_conjuntas$lambda,
       hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
-        zoomType = 'y'
+        zoomType = 'xy'
       ) %>%
       hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
@@ -461,11 +586,11 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d8"),
       num_delay = 8,
-      estimativas_lambda = estimativas_com_chute$lambda,
+      estimativas_lambda = estimativas_conjuntas$lambda,
       hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
-        zoomType = 'y'
+        zoomType = 'xy'
       ) %>%
       hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
@@ -477,11 +602,11 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d9"),
       num_delay = 9,
-      estimativas_lambda = estimativas_com_chute$lambda,
+      estimativas_lambda = estimativas_conjuntas$lambda,
       hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
-        zoomType = 'y'
+        zoomType = 'xy'
       ) %>%
       hc_yAxis(max = 1500) %>% hc_size(height = 400)
   ),
@@ -493,11 +618,11 @@ tags$div(
     formatar_plot_n_lambda_delayi(
       dados_plot = dados_comparacao_lambda_longo %>% filter(delay == "d10"),
       num_delay = 10,
-      estimativas_lambda = estimativas_com_chute$lambda,
+      estimativas_lambda = estimativas_conjuntas$lambda,
       hoje = 25)%>% 
       hc_chart(
         zoomBySingleTouch = TRUE,
-        zoomType = 'y'
+        zoomType = 'xy'
       ) %>%
       hc_yAxis(max = 1500) %>% hc_size(height = 400)
   )
@@ -509,23 +634,53 @@ tags$div(
 
 ```
 
-# Comparação dos modelos com estrutura independente e conjunta de atraso na notificação
+# Comparação dos modelos
 
 ```{r echo=FALSE}
 tags$div(
   class="grid grid-pad",
   
   tags$div(
-    style = "width: 50%; min-height: 1px;
+    style = "width: 55%; min-height: 1px;
     padding-right: 0px; margin: 0px;",
     class="col-",
-    plot_N_t_modelos %>% hc_size(height = 400)
-  ),
+    tags$img(
+        src = "./assets/img/erros.png", 
+        style="float: center; border-radius: 2px;display: block;
+    margin: 0 auto;",
+        width="750", height="450"
+      )
+  ), 
+  
   tags$div(
-    style = "width: 10%; min-height: 1px;
+    style = "width: 2%; min-height: 1px;
     padding-right: 0px; margin: 0px;",
     class="col-"
   ),
+  
+  tags$div(
+    style = "width: 43%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_N_t_modelos %>% hc_size(height = 450)
+  )
+  
+
+  
+)
+
+```
+
+MI: Modelo com estrutura de atraso na notificação independente
+
+MC: Modelo com estrutura conjunta de atraso na notificação
+
+# Comparação dos modelos por atraso na notificação
+
+```{r echo=FALSE}
+tags$div(
+  class="grid grid-pad",
+
   
   tags$div(
     style = "width: 33%; min-height: 1px;
@@ -693,74 +848,18 @@ tags$div(
 
 ```
 
-
-# Erros de estimação e previsão
-
-De acordo com o modelo ajustado devemos avaliar o erro de estimação pata $t = 1,..., T$ e o erro de previsão para $t = T, ..., T+H$. Uma forma de contabilizar esses erros é através das métricas MAE e RMSE.
-
-Mean Absolute Error Estimation (MAE):
-
-$$\frac{\sum_{t = 1}^{T} |\hat{\theta_{t}} - \theta_{t}|}{T}  $$
-
-Root Mean Squared Error Estimation (RMSE):
-
-$$\sqrt{ \frac{\sum_{t = 1}^{T} (\hat{\theta_{t}} - \theta_{t})^2}{T}  }$$
-
-Mean Absolute Error Prevision (MAE):
-
-$$\frac{\sum_{t = T}^{T+H} |\hat{y_{t}} - y_{t}|}{H}  $$
-
-Root Mean Squared Error Prevision (RMSE):
-
-$$\sqrt{ \frac{\sum_{t = T}^{T+H} (\hat{y_{t}} - y_{t})^2}{H}  }$$
-
-O MAE e RMSE medem a magnitude média dos erros em um conjunto de previsões. 
-
-O RMSE dá um peso maior para erros grandes. Além disso, o RMSE sempre será maior ou igual ao MAE e quanto maior a diferença entre eles, maior a variância dos erros individuais nos dados. Se MAE = RMSE, então todos os erros são da mesma magnitude. 
-
-# Erros de estimação e previsão
-
-
-# Avaliando convergência dos parâmetros
-
-```{r echo=FALSE}
-
-tags$div(
-  class="grid grid-pad",
-  
-  tags$div(
-    style = "width: 33%; min-height: 1px;
-    padding-right: 0px; margin: 0px;",
-    class="col-",
-    plot_a_theta %>% hc_size(height = 200),
-    plot_a_alpha %>% hc_size(height = 200)
-  ),
-  tags$div(
-    style = "width: 33%; min-height: 1px;
-    padding-right: 0px; margin: 0px;",
-    class="col-",
-    plot_c_theta %>% hc_size(height = 200),
-    plot_c_alpha %>% hc_size(height = 200)
-  ),
-  tags$div(
-    style = "width: 33%; min-height: 1px;
-    padding-right: 0px; margin: 0px;",
-    class="col-",
-    plot_f_theta %>% hc_size(height = 200),
-    plot_f_alpha %>% hc_size(height = 200)
-  )
-
-  
-)
-
-```
-
-
-
 # Referências
 
-MAE e RMSE:
-<https://resources.eumetrain.org/data/4/451/english/msg/ver_cont_var/uos3/uos3_ko1.htm#:~:text=The%20MAE%20is%20a%20linear,weighted%20equally%20in%20the%20average.&text=The%20RMSE%20is%20a%20quadratic,in%20both%20of%20the%20references.>
+BASTOS, Leonardo S., et al. **A modelling approach for correcting reporting delays in disease surveillance data**. Statistics in Medicine, 2019.
+
+CHAI, T., DRAXLER, R.R. **Root mean square error (RMSE) or mean absolute error (MAE)? – Arguments against avoiding RMSE in the literature**. Geosci. Model Dev., 2014.
+
+GAMERMAN, D. e LOPES, H. F. **Markov Chain Monte Carlo: stochastic simulation for Bayesian inference**. CRC press, 2006.
+
+GELMAN, A., et al. **Bayesian Data Analysis**. 2013.
+
+NOLAU, Izabel, GAMERMAN, Dani, BASTOS, Leonardo S. **A modeling approach to forecasting data with reporting delay**. Simpósio Nacional de Probabilidade e Estatística, 2022.
+
 
 # 
 

@@ -155,6 +155,61 @@ formatacao_grafico <- function(plot, titulo, titulo_x, titulo_y, hoje){
   
 }
 
+formatacao_grafico_por_delay <- function(plot, titulo, titulo_x, titulo_y, hoje, num_delay){
+  
+  plot = plot %>% 
+    hc_yAxis(title = list(text = titulo_y),
+             lineColor = "#f7f7f7", gridLineColor = "#f4f4f4",
+             labels = list(format = "{value:,.0f}")) %>%
+    hc_xAxis(lineColor = "#f7f7f7", gridLineColor = "#f4f4f4",
+             title = list(text = titulo_x)) %>% 
+    hc_title(
+      text = paste0(
+        "<b style='display: block; font-size: 15px;'>",
+        titulo, "</b>"
+      ),
+      margin = 20,
+      align = "center",
+      style = list(useHTML = TRUE)
+    ) %>% 
+    hc_colors(c(
+      '#2f7ed8', '#0d233a', '#8bbc21', '#910000', '#1aadce',
+      '#492970', '#f28f43', '#77a1e5', '#c42525', '#a6c96a'
+    )) %>% 
+    hc_exporting(
+      enabled = TRUE, 
+      buttons = list(
+        contextButton = list(
+          menuItems = list('downloadCSV', 'downloadSVG')
+        )
+      )
+    )
+  
+  if(is.na(hoje)==TRUE){
+    plot = plot
+  }else{
+    plot = plot %>% 
+      hc_xAxis(
+        plotLines = list(
+          list(
+            value = hoje,
+            color = "gray",
+            dashStyle = 'longdashdot',
+            width = 2,
+            label = list(
+              text = paste0("t=25-", num_delay),
+              style = list(color = "black", fontWeight = "bold")
+            )
+          )
+        )
+      )
+  }
+  
+  return(plot)
+  
+  
+}
+
 estruturar_dados_em_T <- function(dados_dengue, T){
   
   dados_dengue = dados_dengue[1:T,]
@@ -230,6 +285,21 @@ plot_bandas <- function(plot, inicio, fim){
     )
 }
 
+plot_bandas_futuro <- function(plot, inicio, fim){
+  plot %>% 
+    hc_xAxis(
+      plotBands = list(
+        color= '#7F7F7F',
+        from = inicio,
+        to = fim#,
+        # label = list(
+        #   text = paste0("Dados parciais"),
+        #   style = list(color = "#696969", fontWeight = "bold")
+        # )
+      )
+    )
+}
+
 genLog = function(t, a, b, c, f, logScale = TRUE){
   logV = log(f)+log(a)+log(c)-(c*t)-(f+1)*log( b+exp(-c*t) )
   if (logScale){
@@ -282,10 +352,11 @@ formatar_plot_n_lambda_delayi = function(dados_plot, num_delay, estimativas_lamb
              'Total de casos no tempo {point.t}:</span> <b>{point.y:,.0f}</b><br>')
            )
     ) %>% 
-    formatacao_grafico(titulo = paste0("Casos de dengue no tempo com ",num_delay, ' semana(s) de atraso'),
+    formatacao_grafico_por_delay(titulo = paste0("Casos de dengue no tempo com ",num_delay, ' semana(s) de atraso'),
                        titulo_x = "t",
                        titulo_y = "n",
-                       hoje = hoje-num_delay) %>% 
+                       hoje = hoje-num_delay,
+                       num_delay = num_delay) %>% 
     hc_add_series(data = ic_theta[1:ponto_de_corte,],
       type = "arearange",
       hcaes(x = t, low = lower, high = upper),
@@ -316,7 +387,9 @@ formatar_plot_n_lambda_delayi = function(dados_plot, num_delay, estimativas_lamb
 formatacao_grafico_compara_modelos = function(dados_plot, num_delay){
   
   ponto_de_corte = 25 - num_delay
+  
   dados_plot %>% 
+    filter(name != "N") %>% 
     mutate(
       name = case_when(name == 'MI' ~ 'lambda | n - MI',
                        name == 'MC' ~ 'lambda | n - MC',
@@ -327,6 +400,11 @@ formatacao_grafico_compara_modelos = function(dados_plot, num_delay){
       hcaes(x = t, y = value, group = name),marker = F,
       showInLegend = T
     ) %>% 
+    hc_add_series(data = dados_plot,
+                  hcaes(x = t, y = n_td),
+                  type = 'line',
+                  name = 'n',
+                  marker = F) %>% 
     hc_xAxis(
       plotLines = list(
         list(
@@ -335,7 +413,7 @@ formatacao_grafico_compara_modelos = function(dados_plot, num_delay){
           dashStyle = 'longdashdot',
           width = 2,
           label = list(
-            text = paste0("T = ", ponto_de_corte),
+            text = paste0("t=25-", num_delay),
             style = list(color = "black", fontWeight = "bold")
           )
         )
@@ -368,7 +446,12 @@ formatacao_grafico_compara_modelos = function(dados_plot, num_delay){
           menuItems = list('downloadCSV', 'downloadSVG')
         )
       )
-    ) 
+    ) %>% 
+    hc_tooltip(
+      pointFormat = paste0(
+        '<span style="color:{series.color}; font-weight: bold;">{series.name} no tempo {point.t}:</span> <b>{point.y:,.0f}</b>'
+      )
+    )
   
 }
 
@@ -492,10 +575,20 @@ N_t_atualizacao = dados_plot %>%
     pointFormat = paste0(
       '<span style="color:{series.color}; font-weight: bold;">Numéro total de casos no tempo {point.t} com {series.name} :</span> <b>{point.y:,.0f}</b>'
     )
-  ) %>% 
-  plot_bandas(inicio = 25, fim = 35)
+  ) #%>% 
+  # plot_bandas(inicio = 16, fim = 25) %>% 
+  # plot_bandas_futuro(inicio = 26, fim = 35)
 
 # Graficos dados reais =========================================================
+
+
+dados_dengue_parcial = readr::read_rds("dados/dengueData.RDS")
+dados_dengue_parcial = dados_dengue_parcial[1:25,]
+T = dim(dados_dengue_parcial)[1]
+D = dim(dados_dengue_parcial)[2]
+dados_dengue_parcial[outer(1:T, 0:(D - 1), FUN = "+") > T] <- NA
+dados_dengue_parcial$N = rowSums(dados_dengue_parcial, na.rm = T)
+
 
 plot_N_t_completo = dados_dengue_real %>% 
   mutate(t = 1:35) %>% 
@@ -505,14 +598,23 @@ plot_N_t_completo = dados_dengue_real %>%
          showInLegend = T) %>% 
   hc_add_series(
     type = 'line',
-    data = dados_dengue %>%
-      mutate(N = rowSums(dados_dengue, na.rm = T),
-             t = 1:35) %>% 
-      filter(t >=25),
+    data = dados_dengue_parcial %>%
+      mutate(t = 1:25) %>% 
+      filter(t > 15 & t < 26),
     hcaes(x = t, y = N),
     marker = F,
     showInLegend = T,
     name = 'N parcial'
+  ) %>% 
+  hc_add_series(
+    type = 'line',
+    data = dados_dengue_real %>%
+      mutate(t = 1:35) %>% 
+      filter(t > 25),
+    hcaes(x = t, y = N),
+    marker = F,
+    showInLegend = T,
+    name = 'N futuro'
   ) %>% 
   hc_colors(c('black','#BFBFBF', '#7F7F7F')) %>% 
   hc_tooltip(
@@ -585,8 +687,9 @@ plot_estrutura_delay_tempo = dados_dengue_longo %>%
       '<span style="color:{series.color}; font-weight: bold;">Logaritmo no tempo {point.t} com {point.d} unidade(s) de atraso:</span> <b>{point.y:.2f}</b>'
     )
   )  %>% 
-  plot_bandas(inicio = 25, fim = 35) %>% 
-  hc_legend(title = list(text = 'd'))
+  #plot_bandas(inicio = 16, fim = 25) %>% 
+  hc_legend(title = list(text = 'd')) #%>% 
+  #plot_bandas_futuro(inicio = 26, fim = 35)
 
 
 # Dados para modelagem em T = 25 ===============================================
@@ -801,8 +904,7 @@ theta_inicial_indep = apply(estimativas_indep$theta, 2, mean)
 ic_N_t_indep = gerar_intervalo_N_t(theta_t = theta_inicial_indep, confianca = 0.95) %>% 
   as.data.frame()
 
-plot_N_t_indep = dados_dengue %>% 
-  rename('N' = 'N_t') %>% 
+plot_N_t_indep = dados_dengue_real %>% 
   bind_cols(`theta | N` = theta_inicial_indep) %>% 
   mutate(t = 1:35) %>% 
   pivot_longer(cols = 12:13) %>% 
@@ -811,14 +913,14 @@ plot_N_t_indep = dados_dengue %>%
                        group = name),marker = F,
          showInLegend = T,
          tooltip = list(pointFormat = paste0(
-           'Total de casos no tempo {point.t}:</span> <b>{point.y:,.0f}</b><br>')
+           'Total de casos no tempo {point.t}:</span> <b>{point.y:,.2f}</b><br>')
            )
          ) %>% 
   formatacao_grafico(titulo = "Total de casos de dengue ao longo do tempo",
                      titulo_x = "t",
                      titulo_y = "N",
                      hoje = 25) %>% 
-  hc_add_series(data = ic_theta_indep[1:25,],
+  hc_add_series(data = ic_theta_indep[1:15,],
                 type = "arearange",
                 hcaes(x = t, low = lower, high = upper),
                 marker = F,
@@ -828,7 +930,7 @@ plot_N_t_indep = dados_dengue %>%
                   "IC 95% no tempo {point.t}: <b> = [{point.lower:,.2f}; {point.upper:,.2f}]</b><br>"
                 ))
   ) %>% 
-  hc_add_series(data = ic_N_t_indep[25:35,],
+  hc_add_series(data = ic_N_t_indep[15:35,],
                 type = "arearange",
                 hcaes(x = t, low = lower, high = upper),
                 marker = F,
@@ -1053,8 +1155,7 @@ theta_t_conj = apply(estimativas_conjuntas$theta, 2, mean)
 ic_N_t_conj = gerar_intervalo_N_t(theta_t = theta_t_conj, confianca = 0.95) %>%
   as.data.frame()
 
-plot_N_t_conj = dados_dengue %>% 
-  rename('N' = 'N_t') %>% 
+plot_N_t_conj = dados_dengue_real %>% 
   bind_cols(`theta | N` = theta_t_conj) %>% 
   mutate(t = 1:35) %>% 
   pivot_longer(cols = 12:13) %>% 
@@ -1070,7 +1171,7 @@ plot_N_t_conj = dados_dengue %>%
                      titulo_x = "t",
                      titulo_y = "N",
                      hoje = 25) %>% 
-  hc_add_series(data = ic_theta_conj[1:(35-D+1), ],
+  hc_add_series(data = ic_theta_conj[1:15, ],
                 type = "arearange",
                 hcaes(x = t, low = lower, high = upper),
                 marker = F,
@@ -1080,7 +1181,7 @@ plot_N_t_conj = dados_dengue %>%
                   "IC 95% no tempo {point.t}: <b> = [{point.lower:,.2f}; {point.upper:,.2f}]</b><br>"
                 ))
   ) %>% 
-  hc_add_series(data = ic_N_t_conj[(35-D+1):35, ],
+  hc_add_series(data = ic_N_t_conj[15:35, ],
                 type = "arearange",
                 hcaes(x = t, low = lower, high = upper),
                 marker = F,
@@ -1136,7 +1237,7 @@ plot_lamda_conj = lambda_td_conj_longo %>%
 
 dados_comparacao_lambda = lambda_td_conj_longo %>% 
   mutate(t = as.numeric(t)) %>% 
-  left_join(dados_dengue_longo %>% select(-d), by = c("t", "delay"))
+  left_join(dados_dengue_longo_real %>% select(-d), by = c("t", "delay"))
 
 dados_comparacao_lambda_longo = dados_comparacao_lambda %>% 
   pivot_longer(cols = c("lambda_td", "n_td"))
@@ -1176,8 +1277,7 @@ tabela_estimativas_conj = tabela_conj[25:35,] %>%
 
 # Comparacao modelos Poisson ===================================================
 
-plot_N_t_modelos = dados_dengue %>% 
-  rename('N' = 'N_t') %>% 
+plot_N_t_modelos = dados_dengue_real %>% 
   bind_cols(`theta | N - MI`  = theta_inicial_indep,
             `theta | N - MC` = theta_t_conj) %>% 
   mutate(t = 1:35) %>% 
@@ -1237,9 +1337,34 @@ dados_comparacao_modelos = lambda_td_conj_longo %>%
   mutate(t = as.numeric(t)) %>% 
   rename("MI" = "lambda_td",
          "MC" = "value") %>% 
-  left_join(dados_dengue_longo %>% 
+  left_join(dados_dengue_longo_real %>% 
               mutate(d = as.character(d)), by = c("t", "delay", "d")) %>% 
   pivot_longer(cols = c(3,5,6))
+
+desvio_N = sd(dados_dengue_real$N)/2
+cobertura_indep = ic_theta_indep %>% 
+  mutate(N = dados_dengue_real$N,
+         valor_no_ic = ifelse(N >= lower-30 & N <= upper+30, 1, 0))
+cobertura_conj = ic_theta_conj %>% 
+  mutate(N = dados_dengue_real$N,
+         valor_no_ic = ifelse(N >= lower-30 & N <= upper+30, 1, 0))
+
+pct_ind = sum(cobertura_indep$valor_no_ic)/35
+pct_conj = sum(cobertura_conj$valor_no_ic)/35
+
+
+cobertura_indep = ic_N_t_indep %>% 
+  mutate(N = dados_dengue_real$N,
+         valor_no_ic = ifelse(N >= lower-15 & N <= upper+15, 1, 0)) %>% 
+  filter(t > 15)
+cobertura_conj = ic_N_t_conj %>% 
+  mutate(N = dados_dengue_real$N,
+         valor_no_ic = ifelse(N >= lower-15 & N <= upper+15, 1, 0)) %>% 
+  filter(t > 15)
+
+pct_ind = sum(cobertura_indep$valor_no_ic)/20
+pct_conj = sum(cobertura_conj$valor_no_ic)/20
+
 
 # Erros modelos ================================================================
 

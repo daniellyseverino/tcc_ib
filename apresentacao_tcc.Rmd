@@ -39,6 +39,33 @@ tags$div(
 
 # Introdução
 
+&nbsp;
+
+
+$$Atraso \;\; na \;\; notificação\; = \;Casos \;\; notificados \;\; após \;\; a \;\; indicidência $$
+
+&nbsp;
+
+Os casos notificados distorcem a relação entre a incidência da doença **RELATADA** e a **VERDADEIRA** incidência da doença.
+
+Os atrasos na notificação dos casos de incidência de doenças pode ocorrer devido a diversos fatores como:
+
+* Confirmação laboratorial;
+
+* Dificuldades de estrutura;
+
+* Problemas logísticos.
+
+
+Os atrasos dificultam a análise em tempo real do problema.
+
+Então, queremos **RECUPERAR** os atrasos para contruir a estrutura **REAL** dos dados que não foram observados.
+
+Também queremos **PREVER** os casos de doenças infecciosas para, por exemplo, auxiliar no planejamento de alocação de recursos.
+
+
+# Introdução
+
 ```{r echo=FALSE}
 
 tags$div(
@@ -61,11 +88,19 @@ tags$div(
 
 # Objetivos 
 
+&nbsp;
+
 * Ajustar modelos para séries temporais incorporando atraso na notificação.
+
+&nbsp;
 
 * Verificar qualidade de ajuste dos modelos.
 
+&nbsp;
+
 * Avaliar erros de ajuste e erros de previsão dos modelos.
+
+&nbsp;
 
 * Comparar estimativas, erros de ajuste e erros de previsão entre diferentes modelos.
 
@@ -100,6 +135,8 @@ $N_{t} = \sum_{d=0}^{D} n_{t,d}$:&nbsp; Número total de eventos ocorridos no te
 
 # Estrutura típica dos dados com atraso na notificação
 
+&nbsp;
+
 Por definição, existe uma estrutura de dependência entre os dados já que
 
 $$N_{t} =  \sum_{d = 0}^{D} n_{t,d}$$
@@ -116,19 +153,20 @@ Como $n_{t,0}$ são as contagens sem nenhum atraso, pode ser mais interessante e
 
 # Metodologia
 
+
 * Modelos hierárquicos com abordagem bayesiana:
   
   * Estrutura de atraso na notificação independente.
   
-  * Estrutura de atraso na notificação conjunta.
+  * Estrutura conjunta de atraso na notificação.
 
-* Estimação pontual e intervalar.
+* Estimação pontual e intervalar das quantidades desconhecidas dos modelos.
 
 * Previsão:
 
-  * Nowcasting: Previsão para as contagens parciais.
+  * Nowcasting: Previsão para as contagens parciais de incidência da doença.
 
-  * Forecasting: Previsão para os casos futuros.
+  * Forecasting: Previsão para as contagens futuras de incidência da doença.
   
   
 
@@ -215,8 +253,11 @@ $$\begin{align}
 
 # Densidades das distribuições a priori
 
+&nbsp;
+
 As distribuições a priori foram especificadas de acordo com as estimativas obtidas através de uma aplicação realizada anteriormente e apresentada em Bastos et al, 2019.
 
+&nbsp;
 
 ```{r echo=FALSE}
 
@@ -257,29 +298,29 @@ tags$div(
 
 Umas das formas de comparar os modelos é contrastar os erros de estimação e previsão. Para isso, foram calculadas as métricas MAE (Mean Absolute Error) e RMSE (Root Mean Squared Error).
 
+O MAE e RMSE medem a magnitude média dos erros em um conjunto de estimações ou previsões.
 
 MAE:
 
-$$\frac{\sum_{i = 1}^{n} |\hat{y_{i}} - y_{i}|}{n}  $$
+$$\frac{\sum_{t} |\hat{y_{t}} - y_{t}|}{m}  $$
 
 RMSE:
 
-$$\sqrt{ \frac{\sum_{i = 1}^{n} (\hat{y_{i}} - y_{i})^2}{n}  }$$
+$$\sqrt{ \frac{\sum_{t} (\hat{y_{t}} - y_{t})^2}{m}  }$$
+Onde $m$ é o número de parcelas da soma.
 
-O MAE e RMSE medem a magnitude média dos erros em um conjunto de estimações ou previsões. 
+Os índices do somatório vão depender do tempo para $N_{t}$ e do tempo e defasagens para $n_{t,d}$. 
 
-O RMSE dá um peso maior para erros grandes. Além disso, o RMSE sempre será maior ou igual ao MAE e quanto maior a diferença entre eles, maior a variância dos erros individuais nos dados. Se MAE = RMSE, então todos os erros são da mesma magnitude. 
+Erros de estimação ou previsão para $n_{t,d}$: &nbsp; $y_{t}  = n_{t,d}$ &nbsp; e &nbsp; $\hat{y_{t}} = E(\lambda_{t,d} | \underline{n})$ onde $\underline{n} = \{n_{t,d}\}$ é a coleção dos dados observados.
 
-Erros de estimação ou previsão para $n_{t,d}$: &nbsp; $y_{i}  = n_{t,d}$ &nbsp; e &nbsp; $\hat{y_{i}} = E(\lambda_{t,d}|n_{t,d})$
-
-Erros de estimação ou previsão para $N_{t}$: &nbsp; $y_{i} = N_{t}$ &nbsp; e &nbsp; $\hat{y_{i}} = E(\theta_{t}|N_{t})$.
+Erros de estimação ou previsão para $N_{t}$: &nbsp; $y_{t} = N_{t}$ &nbsp; e &nbsp; $\hat{y_{t}} = E( \theta_{t} | \underline{n})$ onde $\underline{n} = \{n_{t,d}\}$ é a coleção dos dados observados.
 
 
 # Aplicação - Casos de dengue
 
-Estrutura dos casos reais de dengue no Rio de Janeiro entre janeiro de 2011 e abril de 2012.
+Estrutura dos casos semanais de dengue no Rio de Janeiro entre janeiro de 2011 e abril de 2012.
 
-As notificações dos casos foram feitas semanalmente e foram avaliadas para 35 semanas no total, com no máximo 10 semanas de atraso.
+A série foi observada para 35 semanas e definimos $T = 25$, $D = 10$ e $H = 10$.
 
 As contagens em vermelho foram omitidas para ajustar os modelos e verificar a qualidade das estimativas e previsões obtidas. 
 
@@ -364,14 +405,11 @@ tags$div(
 
 ```
 
-Em Bastos et al, 2019 $\beta_{d}$ depende de $\beta_{d-1}$. Aqui, adicionamos uma restrição de que que $\beta_{d}$ é uma função linear dos atrasos.
+Observa-se que a condição de linearidade para as defasagens ($\beta_{d} = \gamma d$) no modelo com estrutura conjunta de atraso parece razoável para esses dados.
 
+# Estimativas e previsões com estrutura de atraso independente
 
-Bastos et al, 2019 define que a estrutura conjunta de atraso na notificação apresenta um mecanismo onde as contagens dependem dos valores observados para o atraso anterior.
-
-Aqui, adicionamos uma restrição de que os atrasos apresentam uma estrutura linear.
-
-# Estimativas e previões com estrutura de atraso independente
+&nbsp;
 
 ```{r echo=FALSE}
 
@@ -433,6 +471,8 @@ Observando os gráficos, parece que realmente há uma estrutura de decaimento no
 
 
 # Estimativas e previsões com estrutura conjunta de atraso
+
+&nbsp;
 
 ```{r echo=FALSE}
 tags$div(
@@ -634,47 +674,6 @@ tags$div(
 
 ```
 
-# Comparação dos modelos
-
-```{r echo=FALSE}
-tags$div(
-  class="grid grid-pad",
-  
-  tags$div(
-    style = "width: 55%; min-height: 1px;
-    padding-right: 0px; margin: 0px;",
-    class="col-",
-    tags$img(
-        src = "./assets/img/erros.png", 
-        style="float: center; border-radius: 2px;display: block;
-    margin: 0 auto;",
-        width="750", height="450"
-      )
-  ), 
-  
-  tags$div(
-    style = "width: 2%; min-height: 1px;
-    padding-right: 0px; margin: 0px;",
-    class="col-"
-  ),
-  
-  tags$div(
-    style = "width: 43%; min-height: 1px;
-    padding-right: 0px; margin: 0px;",
-    class="col-",
-    plot_N_t_modelos %>% hc_size(height = 450)
-  )
-  
-
-  
-)
-
-```
-
-MI: Modelo com estrutura de atraso na notificação independente
-
-MC: Modelo com estrutura conjunta de atraso na notificação
-
 # Comparação dos modelos por atraso na notificação
 
 ```{r echo=FALSE}
@@ -848,6 +847,61 @@ tags$div(
 
 ```
 
+
+# Comparação dos modelos
+
+&nbsp;
+
+```{r echo=FALSE}
+tags$div(
+  class="grid grid-pad",
+  
+  tags$div(
+    style = "width: 55%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    tags$img(
+        src = "./assets/img/erros.png", 
+        style="float: center; border-radius: 2px;display: block;
+    margin: 0 auto;",
+        width="750", height="500"
+      )
+  ), 
+  
+  tags$div(
+    style = "width: 2%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-"
+  ),
+  
+  tags$div(
+    style = "width: 43%; min-height: 1px;
+    padding-right: 0px; margin: 0px;",
+    class="col-",
+    plot_N_t_modelos %>% hc_size(height = 500)
+  )
+  
+
+  
+)
+
+```
+
+# Trabalhos futuros
+
+&nbsp;
+
+* Usar outras estatísticas para avaliar as estimações e previsões.
+
+&nbsp;
+
+* Testar outras formulações para o efeito das defasagens ($\beta_{d}$) e efeitos do tempo ($\alpha_{t}$).
+
+&nbsp;
+
+* Ajustar os modelos utilizando outra distribuição para a contagem de casos de incidência de doenças, como a distribuição Binomial Negativa.
+
+
 # Referências
 
 BASTOS, Leonardo S., et al. **A modelling approach for correcting reporting delays in disease surveillance data**. Statistics in Medicine, 2019.
@@ -855,6 +909,8 @@ BASTOS, Leonardo S., et al. **A modelling approach for correcting reporting dela
 CHAI, T., DRAXLER, R.R. **Root mean square error (RMSE) or mean absolute error (MAE)? – Arguments against avoiding RMSE in the literature**. Geosci. Model Dev., 2014.
 
 GAMERMAN, D. e LOPES, H. F. **Markov Chain Monte Carlo: stochastic simulation for Bayesian inference**. CRC press, 2006.
+
+GAMERMAN, D., et al. **Building a Platform for Data-Driven Pandemic Prediction from Data Modelling to Visualisation - The CovidLP Project**. CRC press, 2022.
 
 GELMAN, A., et al. **Bayesian Data Analysis**. 2013.
 

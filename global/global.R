@@ -17,6 +17,7 @@ library(coda)
 library(kableExtra)
 library(htmltools)
 library(brms)
+library(tinytex)
 
 # Distribuições a priori =======================================================
 

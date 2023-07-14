@@ -2,6 +2,7 @@
 # Autora: Danielly Santos Sevrino
 
 rm(list = ls())
+options(OutDec = ",") 
 
 # Pacotes ======================================================================
 
@@ -580,6 +581,57 @@ N_t_atualizacao = dados_plot %>%
   # plot_bandas(inicio = 16, fim = 25) %>% 
   # plot_bandas_futuro(inicio = 26, fim = 35)
 
+
+plot_distorcao = data.frame(
+  t = 16:25,
+  `N parcial` = c(4393,3382,3692,3359,2454,2214,1614,1264,684,273),
+  `N real` = c(4404,3439,3770,3561,2726,2438,1838,1579,920,718),
+  Distorção = c(11,57,78,202,272,224,224,315,236,445)
+) %>% 
+  mutate(
+    `Distorção relativa` = (Distorção/lag(Distorção,1)) - 1
+  )
+
+plot_distorcao = highchart() %>% 
+  hc_xAxis(categories = plot_distorcao %>% pull(t),
+           crosshair = TRUE,
+           showInLegend = T,
+           title = list(text = 't')) %>% 
+  hc_add_series(name = "Distorção",
+                data = plot_distorcao,
+                type = "column",
+                yAxis = 0,
+                hcaes(
+                  x = t,
+                  y = Distorção
+                ),
+                dataLabels = list(enabled = TRUE,
+                                  color="black",
+                                  format='{point.y}')) %>% 
+  # hc_add_series(type = 'line',
+  #               data = plot_distorcao,
+  #               hcaes(x = t,
+  #                     y = `Distorção relativa`),
+  #               name = 'Distorção relativa',
+  #               yAxis = 1,
+  #               dataLabels = list(enabled = TRUE, 
+  #                                 color = "gray", 
+  #                                 format = '{point.y:.2f}')) %>% 
+  # hc_yAxis_multiples(
+  #   list(lineWidth = 3, title = list(text = "Distorção")),
+  #   list(showLastLabel = FALSE, opposite = TRUE,
+  #        title = list(text = "Distorção relativa"))) %>% 
+  hc_colors(c("#C00000", 'black')) %>% 
+  hc_title(
+    text = paste0(
+      "<b style='display: block; font-size: 15px;'>", 
+      "Distorção entre a incidência da doença relatada e a verdadeira incidência da doença", "</b>"
+    ),
+    margin = 20,
+    align = "center",
+    style = list(useHTML = TRUE)
+  ) 
+
 # Graficos dados reais =========================================================
 
 
@@ -1048,6 +1100,26 @@ tabela_estimativas_indep = tabela[25:35,] %>%
   row_spec(1:(nrow(tabela[25:35,])), background = "rgb(235, 235, 245, 0.3)", color = "#07080E")  %>% 
   scroll_box(height = "280px")
 
+
+dados_lambda = list()
+for( i in 1:10){
+  dados_lambda[[i]] = HPDinterval(mcmc(estimativas_indep$lambda[ , , i]), prob = 0.95) %>% 
+    as.data.frame() %>% 
+    mutate(t = 1:35, d = i)
+}
+
+df <- as.data.frame(do.call(cbind, dados_lambda))
+
+dados_n = list()
+for( i in 1:10){
+  dados_n[[i]] = gerar_intervalo_N_t(theta_t = lambda.mean[,i], confianca = 0.95) %>% 
+    as.data.frame() %>% 
+    mutate(t = 1:35, d = i)
+}
+
+df1 <- as.data.frame(do.call(cbind, dados_n))
+
+
 # Incorporando estrutura conjunta de delay =====================================
 
 dados_dengue_longo_completo = dados_dengue_longo %>% 
@@ -1276,6 +1348,24 @@ tabela_estimativas_conj = tabela_conj[25:35,] %>%
   row_spec(1:(nrow(tabela_conj[25:35,])), background = "rgb(235, 235, 245, 0.3)", color = "#07080E")  %>% 
   scroll_box(height = "280px")
 
+dados_lambda = list()
+for( i in 1:10){
+  dados_lambda[[i]] = HPDinterval(mcmc(estimativas_conjuntas$lambda[ , , i]), prob = 0.95) %>% 
+    as.data.frame() %>% 
+    mutate(t = 1:35, d = i)
+}
+
+df <- as.data.frame(do.call(cbind, dados_lambda))
+
+dados_n = list()
+for( i in 1:10){
+  dados_n[[i]] = gerar_intervalo_N_t(theta_t = lambda.mean[,i], confianca = 0.95) %>% 
+    as.data.frame() %>% 
+    mutate(t = 1:35, d = i)
+}
+
+df1 <- as.data.frame(do.call(cbind, dados_n))
+
 # Comparacao modelos Poisson ===================================================
 
 plot_N_t_modelos = dados_dengue_real %>% 
@@ -1343,15 +1433,18 @@ dados_comparacao_modelos = lambda_td_conj_longo %>%
   pivot_longer(cols = c(3,5,6))
 
 desvio_N = sd(dados_dengue_real$N)/2
+
 cobertura_indep = ic_theta_indep %>% 
   mutate(N = dados_dengue_real$N,
-         valor_no_ic = ifelse(N >= lower-30 & N <= upper+30, 1, 0))
+         valor_no_ic = ifelse(N >= lower & N <= upper, 1, 0)) %>% 
+  filter(t  > 15)
 cobertura_conj = ic_theta_conj %>% 
   mutate(N = dados_dengue_real$N,
-         valor_no_ic = ifelse(N >= lower-30 & N <= upper+30, 1, 0))
+         valor_no_ic = ifelse(N >= lower & N <= upper, 1, 0)) %>% 
+  filter(t  > 15)
 
-pct_ind = sum(cobertura_indep$valor_no_ic)/35
-pct_conj = sum(cobertura_conj$valor_no_ic)/35
+pct_ind = sum(cobertura_indep$valor_no_ic)/nrow(cobertura_indep)*100
+pct_conj = sum(cobertura_conj$valor_no_ic)/nrow(cobertura_conj)*100
 
 
 cobertura_indep = ic_N_t_indep %>% 
@@ -1455,6 +1548,55 @@ erro_prev_conj_n = calcula_mae_e_rmse(valores_estimados = lambda_T15,
 
 
 # Convergencia dos parametros ==================================================
+
+ts.plot(estimativas_conjuntas$a_theta)
+abline(h = mean(theta_t_conj), lwd = 2, col = "red")
+
+svg("hiper_conj.svg", height = 10, width = 10)
+par(mfrow = c(5, 2), mar = c(2.5, 2.5, 2.5, 2.5))
+ts.plot(estimativas_conjuntas$a_theta, col = "gray", xlab = "Iteração",
+        ylab = "a_theta", main = "a_theta")
+ts.plot(estimativas_conjuntas$b_theta, col = "gray", xlab = "Iteração",
+        ylab = "b_theta", main = "b_theta")
+ts.plot(estimativas_conjuntas$c_theta, col = "gray", xlab = "Iteração",
+        ylab = "c_theta", main = "c_theta")
+ts.plot(estimativas_conjuntas$f_theta, col = "gray", xlab = "Iteração",
+        ylab = "f_theta", main = "f_theta")
+
+ts.plot(estimativas_conjuntas$a_alpha, col = "gray", xlab = "Iteração",
+        ylab = "a_alpha", main = "a_alpha")
+ts.plot(estimativas_conjuntas$b_alpha, col = "gray", xlab = "Iteração",
+        ylab = "b_alpha", main = "b_alpha")
+ts.plot(estimativas_conjuntas$c_alpha, col = "gray", xlab = "Iteração",
+        ylab = "c_alpha", main = "c_alpha")
+ts.plot(estimativas_conjuntas$f_alpha, col = "gray", xlab = "Iteração",
+        ylab = "f_alpha", main = "f_alpha")
+ts.plot(estimativas_conjuntas$b_beta, col = "gray", xlab = "Iteração",
+        ylab = "gama", main = "gama")
+dev.off() 
+
+
+svg("hiper_ind_N_d.svg", height = 5, width = 10)
+par(mfrow = c(2, 2), mar = c(2.5, 2.5, 2.5, 2.5))
+ts.plot(estimativas_indep$a_alpha[,10], col = "gray", xlab = "Iteração",
+        ylab = "a_theta", main = "a (d = 10)")
+ts.plot(estimativas_indep$b_alpha[,10], col = "gray", xlab = "Iteração",
+        ylab = "a_theta", main = "b (d = 10)")
+ts.plot(estimativas_indep$c_alpha[,10], col = "gray", xlab = "Iteração",
+        ylab = "a_theta", main = "c (d = 10)")
+ts.plot(estimativas_indep$f_alpha[,10], col = "gray", xlab = "Iteração",
+        ylab = "a_theta", main = "f (d = 10)")
+
+ts.plot(estimativas_indep$a_alpha[,9], col = "gray", xlab = "Iteração",
+        ylab = "a_theta", main = "a (d = 9)")
+ts.plot(estimativas_indep$b_alpha[,9], col = "gray", xlab = "Iteração",
+        ylab = "a_theta", main = "b (d = 9)")
+ts.plot(estimativas_indep$c_alpha[,9], col = "gray", xlab = "Iteração",
+        ylab = "a_theta", main = "c (d = 9)")
+ts.plot(estimativas_indep$f_alpha[,9], col = "gray", xlab = "Iteração",
+        ylab = "a_theta", main = "f (d = 9)")
+
+dev.off() 
 
 plot_a_theta = data.frame(
     a_theta = estimativas_conjuntas$a_theta[1:1000],
